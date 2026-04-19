@@ -1,0 +1,23 @@
+﻿@page "/editor"
+@layout EditorLayout
+@attribute [Authorize(Roles = "Editor")]
+
+@using System.Security.Claims
+@inject AuthenticationStateProvider AuthStateProvider
+
+<h1>Editor Dashboard</h1>
+
+@if (user != null)
+{
+    <h3>Hello, @user.Identity?.Name 💖</h3>
+}
+
+@code {
+    private ClaimsPrincipal? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+    }
+}

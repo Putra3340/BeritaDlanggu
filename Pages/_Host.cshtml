@@ -1,0 +1,18 @@
+﻿@page "/admin/{*path}"
+@namespace BeritaDlanggu.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html>
+<head>
+    <base href="~/" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <app>
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </app>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"/>
+    <script src="_framework/blazor.server.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                
+                <NotAuthorized>
+                    <script>window.location.href = "/";</script>
+                </NotAuthorized>
+
+            </AuthorizeRouteView>
+        </Found>
+
+        <NotFound>
+            <h1>Not found</h1>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
