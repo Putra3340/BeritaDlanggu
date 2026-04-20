@@ -1,3 +1,5 @@
+using BeritaDlanggu.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -17,6 +19,9 @@ builder.Services.AddAuthentication("Cookies")
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddDbContext<BeritaDlangguNetContext>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -28,6 +33,8 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+    app.UseSwagger();
+    app.UseSwaggerUI();
 app.UseStaticFiles();
 app.UseRouting();
 

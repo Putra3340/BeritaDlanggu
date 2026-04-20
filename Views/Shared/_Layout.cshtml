@@ -1,45 +1,146 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - BeritaDlanggu</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/BeritaDlanggu.styles.css" asp-append-version="true" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portal Berita Resmi SMKN 1 Dlanggu - Informasi terkini seputar kegiatan sekolah, prestasi siswa, pengumuman, dan agenda penting.">
+    <title>Berita SMKN 1 Dlanggu - Portal Berita Sekolah</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="~/css/site.css" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">BeritaDlanggu</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+    <div id="navbar-container" data-active="">
+        <div class="top-bar">
+            <div class="container">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="breaking-news flex-grow-1">
+                        <span class="breaking-badge">Terbaru</span>
+                        <span class="breaking-text" id="breakingText" style="transition: opacity 0.3s; opacity: 1;">Tim Robotik Sukses Wakili Jawa Timur di Kompetisi Nasional</span>
+                    </div>
+                    <div class="d-none d-md-flex align-items-center gap-3">
+                        <span><i class="bi bi-calendar3 me-1"></i>16 April 2026</span>
+                        <a href="/Auth"><i class="bi bi-person me-1"></i>Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="navbar navbar-expand-lg main-navbar">
+            <div class="container">
+                <a class="navbar-brand" href="index.html">
+                    <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;">S1</div>
+                    <div>
+                        <div style="line-height:1.2">Berita SMKN 1 Dlanggu</div>
+                        <small style="font-size:10px;color:var(--text-muted);font-weight:400">Portal Berita Sekolah</small>
+                    </div>
+                </a>
+                <button class="navbar-toggler border-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-expanded="false">
+                    <i class="bi bi-list fs-4"></i>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                <div class="navbar-collapse collapse" id="mainNav" style="">
+                    <ul class="navbar-nav ms-auto me-3">
+                        <li class="nav-item"><a class="nav-link " href="index.html"><i class="bi bi-house me-1"></i>Beranda</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Berita Sekolah</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah"><strong>Semua Berita Sekolah</strong></a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah&amp;sub=kegiatan-siswa">Kegiatan Siswa</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah&amp;sub=kegiatan-guru">Kegiatan Guru</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah&amp;sub=fasilitas">Fasilitas</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Prestasi</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="category.html?cat=prestasi"><strong>Semua Prestasi</strong></a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="category.html?cat=prestasi&amp;sub=akademik">Akademik</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=prestasi&amp;sub=non-akademik">Non-Akademik</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=prestasi&amp;sub=lomba">Lomba</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Pengumuman</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="category.html?cat=pengumuman"><strong>Semua Pengumuman</strong></a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="category.html?cat=pengumuman&amp;sub=ppdb">PPDB</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=pengumuman&amp;sub=ujian">Ujian</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=pengumuman&amp;sub=libur">Libur</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Ekstrakurikuler</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler"><strong>Semua Ekstrakurikuler</strong></a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler&amp;sub=olahraga">Olahraga</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler&amp;sub=seni">Seni</a></li>
+                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler&amp;sub=teknologi">Teknologi</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" href="category.html?cat=agenda">Agenda</a>
                         </li>
                     </ul>
+                    <form class="navbar-search d-none d-lg-block" action="search.html" method="GET">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" name="q" placeholder="Cari berita..." autocomplete="off">
+                    </form>
                 </div>
             </div>
         </nav>
-    </header>
+    </div>
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="main-footer">
         <div class="container">
-            &copy; 2026 - BeritaDlanggu - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="row g-4">
+                <div class="col-lg-4 footer-about">
+                    <h5><i class="bi bi-mortarboard-fill me-2"></i>${settings.siteName || 'Berita SMKN 1 Dlanggu'}</h5>
+                    <p>Portal berita resmi SMKN 1 Dlanggu yang menyajikan informasi terkini seputar kegiatan sekolah, prestasi siswa, pengumuman, dan berbagai agenda penting.</p>
+                    <div class="footer-social mt-3">
+                        <a href="#" title="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a href="#" title="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a href="#" title="YouTube"><i class="bi bi-youtube"></i></a>
+                        <a href="#" title="Twitter"><i class="bi bi-twitter-x"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <h5>Kategori</h5>
+                    <ul class="list-unstyled footer-links">
+                        ${categories.map(cat => `
+                        <li><a href="${basePath}category.html?cat=${cat.slug}">${cat.name}</a></li>`).join('')}
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <h5>Tautan</h5>
+                    <ul class="list-unstyled footer-links">
+                        <li><a href="${basePath}index.html">Beranda</a></li>
+                        <li><a href="#">Tentang Sekolah</a></li>
+                        <li><a href="#">Kontak</a></li>
+                        <li><a href="${basePath}login.html">Login Portal</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <h5>Kontak</h5>
+                    <ul class="list-unstyled footer-contact">
+                        <li><i class="bi bi-geo-alt-fill"></i><span>Jl. Raya Dlanggu, Kec. Dlanggu, Kab. Mojokerto, Jawa Timur</span></li>
+                        <li><i class="bi bi-telephone-fill"></i><span>(0321) 123456</span></li>
+                        <li><i class="bi bi-envelope-fill"></i><span>info@smkn1dlanggu.sch.id</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container text-center">
+                &copy; ${new Date().getFullYear()} ${settings.siteName || 'SMKN 1 Dlanggu'}. All rights reserved.
+            </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

@@ -1,4 +1,5 @@
 using BeritaDlanggu.Models;
+using BeritaDlanggu.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -8,10 +9,77 @@ namespace BeritaDlanggu.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly BeritaDlangguNetContext _context;
+
+        public HomeController(BeritaDlangguNetContext context)
+        {
+            _context = context;
+        }
         public IActionResult Index()
         {
-            return View();
+            var featured = _context.Articles
+    .Where(a => a.IsFeatured && a.Status == (int)ArticleStatus.Published)
+    .OrderByDescending(a => a.PublishedAt)
+    .Take(5)
+    .Select(a => new ArticleViewModel
+    {
+        Id = a.Id,
+        Title = a.Title,
+        Content = a.Excerpt,
+        AuthorName = a.Author.FullName,
+        CreatedAt = a.CreatedAt
+    })
+    .ToList();
+            var latest = _context.Articles
+    .Where(a => a.Status == (int)ArticleStatus.Published)
+    .OrderByDescending(a => a.CreatedAt)
+    .Take(10)
+    .Select(a => new ArticleViewModel
+    {
+        Id = a.Id,
+        Title = a.Title,
+        Content = a.Excerpt,
+        AuthorName = a.Author.FullName,
+        CreatedAt = a.CreatedAt
+    })
+    .ToList();
+            var trending = _context.Articles
+    .Where(a => a.Status == (int)ArticleStatus.Published)
+    .OrderByDescending(a => a.Views)
+    .Take(5)
+    .Select(a => new ArticleViewModel
+    {
+        Id = a.Id,
+        Title = a.Title,
+        Content = a.Excerpt,
+        AuthorName = a.Author.FullName,
+        CreatedAt = a.CreatedAt
+    })
+    .ToList();
+            var announcements = _context.Articles
+    .Where(a => a.Category.Any(c => c.Slug == "pengumuman"))
+    .OrderByDescending(a => a.CreatedAt)
+    .Take(5)
+    .Select(a => new ArticleViewModel
+    {
+        Id = a.Id,
+        Title = a.Title,
+        Content = a.Excerpt,
+        AuthorName = a.Author.FullName,
+        CreatedAt = a.CreatedAt
+    })
+    .ToList();
+            var model = new HomeViewModel
+            {
+                FeaturedArticles = featured,
+                LatestArticles = latest,
+                TrendingArticles = trending,
+                AnnouncementArticles = announcements
+            };
+
+            return View(model);
         }
+
         public async Task<IActionResult> Login()
         {
             var claims = new List<Claim>

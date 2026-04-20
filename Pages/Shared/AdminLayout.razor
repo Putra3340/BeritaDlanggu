@@ -1,12 +1,69 @@
 ﻿@inherits LayoutComponentBase
 
-<div style="display:flex;">
-    <aside style="width:200px;background:#111;color:white;padding:10px;">
-        <h3>Admin</h3>
-        <a href="/admin">Dashboard</a>
+<div class="dashboard-wrapper">
+    <aside class="dashboard-sidebar @(isSidebarOpen ? "show" : "")">
+        <div class="sidebar-brand">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;">S1</div>
+            <div>
+                <h5>Admin Panel</h5>
+                <small>SMKN 1 Dlanggu</small>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-label">Dashboard</div>
+            <div class="nav-item">
+                <NavLink href="/Admin" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active">
+                    <i class="bi bi-speedometer2"></i> Overview
+                </NavLink>
+            </div>
+            <div class="nav-label">Konten</div>
+            <div class="nav-item">
+                <NavLink href="/Admin/Article" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active">
+                    <i class="bi bi-file-earmark-text"></i>Artikel
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Admin/CreateArticle" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-plus-circle"></i>Tulis Artikel</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Admin/Categories" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-tags"></i>Kategori</NavLink>
+            </div>
+            <div class="nav-label">Administrasi</div>
+            <div class="nav-item">
+                <NavLink href="/Admin/Users" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-people"></i>Manajemen User</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Admin/Settings" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-gear"></i>Pengaturan</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Admin/Logs" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-clock-history"></i>Activity Log</NavLink>
+            </div>
+            <div class="nav-label">Lainnya</div>
+            <div class="nav-item">
+                <NavLink href="/" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-globe"></i>Lihat Website</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Auth/Logout" onclick="logout()" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-box-arrow-left"></i>Logout</NavLink>
+            </div>
+        </nav>
     </aside>
 
-    <main style="padding:20px;">
-        @Body
+    <main class="dashboard-main">
+        <button class="btn btn-primary d-lg-none mb-3"
+                @onclick="() => ToggleSidebar(true)">
+            <i class="bi bi-list"></i>
+        </button>
+        <div @onclick="() => ToggleSidebar(false)">
+            @Body
+        </div>
     </main>
 </div>
+
+@code {
+    private bool isSidebarOpen = false;
+
+    private void ToggleSidebar(bool state)
+    {
+        isSidebarOpen = state;
+    }
+}

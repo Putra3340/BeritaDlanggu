@@ -1,0 +1,278 @@
+﻿@page "/Admin/Categories"
+@layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject BeritaDlangguNetContext Db
+
+<div class="dashboard-topbar">
+    <h4>Manajemen Kategori</h4>
+    <button class="btn btn-primary btn-sm" @onclick="() => OpenModal()">
+        <i class="bi bi-plus me-1"></i>Tambah Kategori
+    </button>
+</div>
+<div class="row g-4">
+    @foreach (var cat in categories)
+    {
+        <div class="col-md-6 col-lg-4">
+            <div class="settings-card">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1">@cat.Name</h5>
+                        <p class="small text-muted mb-0">@cat.Description</p>
+                    </div>
+                    <div class="d-flex gap-1">
+                        <button class="action-btn edit" @onclick="() => OpenModal(cat.Id)" title="Edit"><i class="bi bi-pencil"></i></button>
+                        <button class="action-btn delete" onclick="deleteCategory(@cat.Id)" title="Hapus"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <span class="badge" style="background:var(--primary-lightest);color:var(--primary)">@cat.ArticleCount artikel</span>
+                </div>
+                <div class="mt-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <small class="fw-semibold text-muted">Sub-Kategori</small>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:12px" @onclick="() => OpenSubModal(cat.Id)"><i class="bi bi-plus"></i></button>
+                    </div>
+                    @foreach (var subcat in cat.Children)
+                    {
+                        <div class="d-flex align-items-center justify-content-between py-1">
+                            <span class="small">@subcat.Name</span>
+                            <button class="btn btn-sm text-danger p-0" @onclick="() => DeleteSubCategory(subcat.Id)" title="Hapus">
+                                <i class="bi bi-x-circle" style="font-size:14px"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+<!-- Category Modal -->
+<div class="modal fade @(isCategoryModalOpen ? "show d-block" : "")"
+     tabindex="-1"
+     style="background-color:@(isCategoryModalOpen ? "rgba(0,0,0,0.5)" : "transparent")">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius-lg);border:none">
+
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    @(isEdit ? "Edit Kategori" : "Tambah Kategori")
+                </h5>
+
+                <button type="button" class="btn-close"
+                        @onclick="CloseModal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nama Kategori</label>
+                    <input type="text" class="form-control" @bind="catName" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Deskripsi</label>
+                    <textarea class="form-control" rows="2" @bind="catDesc"></textarea>
+                </div>
+
+                <button class="btn btn-primary w-100" @onclick="SaveCategory">
+                    <i class="bi bi-check-circle me-2"></i>Simpan
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Subcategory Modal -->
+<div class="modal fade  @(isSubCategoryModalOpen ? "show d-block" : "")" tabindex="-1"
+     style="background-color:@(isSubCategoryModalOpen ? "rgba(0,0,0,0.5)" : "transparent")">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius-lg);border:none">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold"> @(isSubEdit ? "Edit Sub Kategori" : "Tambah Sub Kategori")</h5>
+                <button type="button" class="btn-close" @onclick="CloseSubModal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="subcatForm">
+                    <input type="hidden" id="subcatParentId">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Sub-Kategori</label>
+                        <input type="text" class="form-control" id="subcatName" required @bind="catSubName">
+                    </div>
+                    <button class="btn btn-primary w-100" @onclick="SaveSubCategory"><i class="bi bi-check-circle me-2"></i>Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    private List<CategoryTreeDto> categories;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+
+        ReloadCategory();
+    }
+
+    public void ReloadCategory()
+    {
+        var allCategories = Db.Categories.ToList();
+        categories = allCategories
+            .Where(x => x.ParentId == null)
+            .Select(parent => new CategoryTreeDto
+            {
+                Id = parent.Id,
+                Name = parent.Name,
+                Description = parent.Description,
+                ArticleCount = parent.Article.Count(),
+                Children = allCategories
+                    .Where(c => c.ParentId == parent.Id)
+                    .Select(child => new CategoryTreeDto
+                    {
+                        Id = child.Id,
+                        Name = child.Name,
+                        Description = child.Description
+                    })
+                    .ToList()
+            })
+            .ToList();
+    }
+    public class CategoryTreeDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int ArticleCount { get; set; }
+        public List<CategoryTreeDto> Children { get; set; } = new();
+    }
+}
+@code {
+    private bool isCategoryModalOpen;
+    private bool isEdit;
+
+    private string catName;
+    private string catDesc;
+
+    private int? catEditId;
+
+    private void OpenModal(int? id = null)
+    {
+        isEdit = id != null;
+        catEditId = id;
+
+        if (isEdit)
+        {
+            var cat = Db.Categories.First(x => x.Id == id);
+            catName = cat.Name;
+            catDesc = cat.Description;
+        }
+        else
+        {
+            catName = "";
+            catDesc = "";
+        }
+
+        isCategoryModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isCategoryModalOpen = false;
+    }
+    private void DeleteCategory(int id)
+    {
+        var cat = Db.Categories.First(x => x.Id == id);
+        Db.Categories.Remove(cat);
+        Db.SaveChanges();
+
+        ReloadCategory();
+
+    }
+
+    private void SaveCategory()
+    {
+        if (isEdit)
+        {
+            var cat = Db.Categories.First(x => x.Id == catEditId);
+            cat.Name = catName;
+            cat.Description = catDesc;
+        }
+        else
+        {
+            Db.Categories.Add(new BeritaDlanggu.Models.Categories
+            {
+                Name = catName,
+                Description = catDesc,
+                Slug = catName.ToLower().Replace(" ", "-"),
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        Db.SaveChanges();
+        CloseModal();
+        ReloadCategory();
+    }
+}
+@code {
+    private bool isSubCategoryModalOpen;
+    private bool isSubEdit;
+
+    private string catSubName;
+
+    private int? catSubEditId;
+    private int catParentId;
+
+    private void OpenSubModal(int parentId, int? id = null)
+    {
+        isSubEdit = id != null;
+        catSubEditId = id;
+        catParentId = parentId;
+
+        if (isSubEdit)
+        {
+            var cat = Db.Categories.First(x => x.Id == id);
+            catSubName = cat.Name;
+        }
+        else
+        {
+            catSubName = "";
+        }
+
+        isSubCategoryModalOpen = true;
+    }
+
+    private void CloseSubModal()
+    {
+        isSubCategoryModalOpen = false;
+    }
+    private void DeleteSubCategory(int id)
+    {
+        var cat = Db.Categories.First(x => x.Id == id);
+        Db.Categories.Remove(cat);
+        Db.SaveChanges();
+        ReloadCategory();
+    }
+
+    private void SaveSubCategory()
+    {
+        if (isSubEdit)
+        {
+            var cat = Db.Categories.First(x => x.Id == catEditId);
+            cat.Name = catSubName;
+        }
+        else
+        {
+            Db.Categories.Add(new BeritaDlanggu.Models.Categories
+            {
+                Name = catSubName,
+                Slug = catSubName.ToLower().Replace(" ", "-"),
+                ParentId = catParentId,
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        Db.SaveChanges();
+        CloseModal();
+        ReloadCategory();
+    }
+}

@@ -1,5 +1,132 @@
-﻿@page "/admin"
+﻿@page "/Admin"
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
+@inject BeritaDlangguNetContext Db
 
-<h1>Admin Dashboard</h1>
+
+<div class="dashboard-topbar">
+    <div>
+        <h4>Admin Dashboard</h4>
+        <p class="text-muted mb-0 small">Ringkasan sistem dan aktivitas terkini</p>
+    </div>
+    <div class="user-info">
+        <span id="adminName" class="d-none d-md-inline">Admin</span>
+        <div class="user-avatar" id="adminAvatar">A</div>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="stat-value" id="statArticles">0</div>
+            <div class="stat-label">Total Artikel</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-people"></i></div>
+            <div class="stat-value" id="statUsers">0</div>
+            <div class="stat-label">Total User</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class="bi bi-tags"></i></div>
+            <div class="stat-value" id="statCategories">0</div>
+            <div class="stat-label">Kategori</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-eye"></i></div>
+            <div class="stat-value" id="statTotalViews">0</div>
+            <div class="stat-label">Total Views</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Articles -->
+    <div class="col-lg-7">
+        <div class="settings-card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold mb-0">Artikel Terbaru</h5>
+                <a href="../editor/index.html" class="small fw-semibold text-primary">Lihat Semua →</a>
+            </div>
+            @foreach (var item in LatestArticle)
+            {
+                <div class="sidebar-item">
+                    <div class="item-thumb">
+                        <img src="@item.Banner" alt="@item.Title">
+                    </div>
+                    <div class="item-content" style="flex:1">
+                        <h6><a href="../editor/article-form.html?id=1">@item.Title</a></h6>
+                        <span class="item-meta">
+                            <span class="status-badge published" style="font-size:10px;padding:2px 8px">published</span>
+                            • @ToRelativeTime(item.CreatedAt)
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="col-lg-5">
+        <div class="settings-card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold mb-0">Aktivitas Terkini</h5>
+                <a href="logs.html" class="small fw-semibold text-primary">Lihat Semua →</a>
+            </div>
+            <div id="recentLogs"></div>
+        </div>
+    </div>
+</div>
+@code {
+    private List<ArticleViewModel> LatestArticle = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        LatestArticle = Db.Articles
+    .Where(a => a.Status == (byte)ArticleStatus.Published)
+    .OrderByDescending(a => a.CreatedAt)
+    .Take(10)
+    .Select(a => new ArticleViewModel
+    {
+        Id = a.Id,
+        Title = a.Title,
+        Content = a.Excerpt,
+        AuthorName = a.Author.FullName,
+        CreatedAt = a.CreatedAt
+    })
+    .ToList();
+    }
+
+    public string ToRelativeTime(DateTime input)
+    {
+        var ts = DateTime.Now - input;
+
+        if (ts.TotalSeconds < 60)
+            return $"{(int)ts.TotalSeconds} detik lalu";
+
+        if (ts.TotalMinutes < 60)
+            return $"{(int)ts.TotalMinutes} menit lalu";
+
+        if (ts.TotalHours < 24)
+            return $"{(int)ts.TotalHours} jam lalu";
+
+        if (ts.TotalDays < 7)
+            return $"{(int)ts.TotalDays} hari lalu";
+
+        if (ts.TotalDays < 30)
+            return $"{(int)(ts.TotalDays / 7)} minggu lalu";
+
+        if (ts.TotalDays < 365)
+            return $"{(int)(ts.TotalDays / 30)} bulan lalu";
+
+        return $"{(int)(ts.TotalDays / 365)} tahun lalu";
+    }
+}
