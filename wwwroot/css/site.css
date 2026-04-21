@@ -1840,10 +1840,12 @@ img {
     transition: transform var(--transition-slow);
     min-width: 300px;
     border-left: 4px solid var(--success);
+    opacity: 0;
 }
 
     .toast-notification.show {
         transform: translateX(0);
+        opacity: 1;
     }
 
     .toast-notification.error {

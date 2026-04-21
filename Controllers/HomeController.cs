@@ -17,6 +17,7 @@ namespace BeritaDlanggu.Controllers
         }
         public IActionResult Index()
         {
+            var scheme = $"{Request.Scheme}://{Request.Host}";
             var featured = _context.Articles
     .Where(a => a.IsFeatured && a.Status == (int)ArticleStatus.Published)
     .OrderByDescending(a => a.PublishedAt)
@@ -25,6 +26,8 @@ namespace BeritaDlanggu.Controllers
     {
         Id = a.Id,
         Title = a.Title,
+        Banner = scheme + a.ThumbnailUrl,
+        CategoryName = a.Category.FirstOrDefault(x=>x.ParentId == null).Name,
         Content = a.Excerpt,
         AuthorName = a.Author.FullName,
         CreatedAt = a.CreatedAt
@@ -86,7 +89,7 @@ namespace BeritaDlanggu.Controllers
             {
                 new Claim(ClaimTypes.Name, "John Doe"),
                 new Claim(ClaimTypes.Email, "johndoe@example.com"),
-                new Claim(ClaimTypes.Role, "Editor")
+                new Claim(ClaimTypes.Role, "Admin")
             };
 
             var identity = new ClaimsIdentity(claims, "Cookie");

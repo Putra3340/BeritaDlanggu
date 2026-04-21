@@ -1,8 +1,272 @@
 ﻿@page "/Admin/Users"
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
-<h3>Users</h3>
+@inject BeritaDlangguNetContext Db
+@inject NotificationService Notif
+<div class="dashboard-topbar">
+    <h4>Manajemen User</h4>
+    <button class="btn btn-primary btn-sm" @onclick="() => OpenModal()">
+        <i class="bi bi-plus me-1"></i>Tambah User
+    </button>
+</div>
+
+<div class="dashboard-table">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in UserList)
+                {
+                    
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="user-avatar" style="width:36px;height:36px;font-size:14px">@(user.FullName.Length != 0 ? user.FullName.Substring(0, 1) : "A")</div>
+                                <strong>@user.FullName</strong>
+                            </div>
+                        </td>
+                        <td class="text-muted">@user.Username</td>
+                        <td>
+                            <span class="badge @(user.Role == "Admin" ? "bg-danger" : "bg-warning")" style="">@user.Role</span>
+                        </td>
+                        <td>
+                            <span class="status-badge @(user.IsActive ? "published" : "draft")">@(user.IsActive ? "Active" : "Inactive")</span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="action-btn edit" @onclick="() => OpenModal(user.Id)"><i class="bi bi-pencil"></i></button>
+                                @if (AdminMoreThanOne || user.Role != "Admin")
+                                {
+                                    <button class="action-btn delete" @onclick="() => DeleteUser(user.Id)"><i class="bi bi-trash"></i></button>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<!-- User Modal -->
+<div class="modal fade @(isUserModalOpen ? "show d-block" : "")" tabindex="-1" style="background-color:@(isUserModalOpen ? "rgba(0,0,0,0.5)" : "transparent")">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius-lg);border:none">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">@((isEdit ? "Edit User" : "Tambah User"))</h5>
+                <button type="button" class="btn-close" @onclick="CloseModal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="userEditId">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nama Lengkap</label>
+                    <input type="text" class="form-control" id="userName" required @bind="userFullname">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Username</label>
+                    <input type="text" class="form-control" id="userUsername" required @bind="userName">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" class="form-control" id="userEmail" required @bind="userEmail">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Password</label>
+                    <input type="password" class="form-control" id="userPassword" @bind="userPassword">
+                    <div class="form-text" id="passwordHint">Minimal 6 karakter</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Role</label>
+                    <select class="form-select" id="userRole" @bind="userRole">
+                        <option value="Editor">Editor</option>
+                        <option value="Admin">Admin</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Status</label>
+                    <select class="form-select" id="userStatus" @bind="userStatus">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary w-100" @onclick="SaveUser" "><i class="bi bi-check-circle me-2"></i>Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
+    private List<BeritaDlanggu.Models.Users> UserList;
+    private bool AdminMoreThanOne = false;
 
+    protected override void OnInitialized()
+    {
+        UserList = Db.Users.ToList();
+        AdminMoreThanOne = Db.Users.Where(x => x.Role == "Admin").Count() > 1;
+    }
+    private void ReloadUser()
+    {
+        AdminMoreThanOne = Db.Users.Where(x => x.Role == "Admin").Count() > 1;
+        UserList = Db.Users.ToList();
+        StateHasChanged();
+    }
+}
+@code {
+    private bool isUserModalOpen;
+    private bool isEdit;
+
+    private string userFullname;
+    private string userName;
+    private string userEmail;
+    private string userPassword;
+    private string userRole;
+    private string userStatus;
+
+    private int? userEditId;
+
+    private void OpenModal(int? id = null)
+    {
+        isEdit = id != null;
+        userEditId = id;
+
+        if (isEdit)
+        {
+            var user = Db.Users.First(x => x.Id == id);
+            userFullname = user.FullName;
+            userName = user.Username;
+            userEmail = user.Email;
+            userRole = user.Role;
+            userStatus = user.IsActive ? "active" : "inactive";
+            userPassword = "";
+
+        }
+        else
+        {
+            userFullname = "";
+            userName = "";
+            userEmail = "";
+            userPassword = "";
+            userRole = "Editor";
+            userStatus = "active";
+        }
+
+        isUserModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isUserModalOpen = false;
+    }
+    private void DeleteUser(int id)
+    {
+        var user = Db.Users.First(x => x.Id == id);
+        Db.Users.Remove(user);
+        Db.SaveChanges();
+
+        ReloadUser();
+
+    }
+
+    private void SaveUser()
+    {
+        if (!ValidateData())
+            return;
+        var hasher = new PasswordHasher<object>();
+        if (isEdit)
+        {
+            var user = Db.Users.First(x => x.Id == userEditId);
+            user.FullName = userFullname;
+            user.Username = userName;
+            if (!string.IsNullOrEmpty(userPassword))
+            {
+                user.PasswordHash = hasher.HashPassword(null, userPassword);
+            }
+            user.Role = userRole;
+            user.IsActive = userStatus == "active";
+            user.Email = userEmail;
+
+            var test = Argon2.Verify(userPassword, user.PasswordHash);
+            Console.WriteLine(test);
+        }
+        else
+        {
+            Db.Users.Add(new BeritaDlanggu.Models.Users
+            {
+                FullName = userFullname,
+                Username = userName,
+                Email = userEmail,
+                PasswordHash = hasher.HashPassword(null, userPassword),
+                Role = userRole,
+                IsActive = userStatus == "active",
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        Db.SaveChanges();
+        CloseModal();
+        Notif.Show("User berhasil disimpan!", "success");
+
+
+        ReloadUser();
+    }
+
+    private bool ValidateData()
+    {
+        if (userFullname.Length == 0)
+        {
+            Notif.Show("Nama Lengkap wajib di isi!", "error");
+            return false;
+        }
+        if (userName.Length == 0)
+        {
+            Notif.Show("Username wajib di isi!", "error");
+            return false;
+        }
+        if (userEmail.Length == 0)
+        {
+            Notif.Show("Email wajib di isi!", "error");
+            return false;
+        }
+        if (!isEdit && userPassword.Length == 0)
+        {
+            Notif.Show("Password wajib di isi!", "error");
+            return false;
+        }
+
+        if (!isEdit && Db.Users.Any(x => x.Email == userEmail))
+        {
+            Notif.Show("Email sudah terdaftar!", "error");
+            return false;
+        }
+        if (!isEdit && Db.Users.Any(x => x.Username == userName))
+        {
+            Notif.Show("Username sudah terdaftar!", "error");
+            return false;
+        }
+        if (isEdit && Db.Users.Any(x => x.Email == userEmail && x.Id != userEditId))
+        {
+            Notif.Show("Email sudah terdaftar!", "error");
+            return false;
+        }
+        if (isEdit && Db.Users.Any(x => x.Username == userName && x.Id != userEditId))
+        {
+            Notif.Show("Username sudah terdaftar!", "error");
+            return false;
+        }
+
+        if (userPassword.Length > 0 && userPassword.Length < 6)
+        {
+            Notif.Show("Password minimal 6 karakter!", "error");
+            return false;
+        }
+
+        return true;
+    }
 }

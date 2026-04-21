@@ -1,7 +1,14 @@
 ﻿@inherits LayoutComponentBase
+@inject NotificationService Notif
+<div id="app-toast"
+     class="toast-notification @type @(string.IsNullOrEmpty(message) ? "" : "show")">
 
+    <i class="bi @GetIcon() @GetColor()"></i>
+    <span>@message</span>
+
+</div>
 <div class="dashboard-wrapper">
-    <aside class="dashboard-sidebar @(isSidebarOpen ? "show" : "")">
+    <aside class="dashboard-sidebar @(isSidebarOpen ? "show" : "") @(string.IsNullOrEmpty(message) ? "" : "show")">
         <div class="sidebar-brand">
             <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;">S1</div>
             <div>
@@ -66,4 +73,48 @@
     {
         isSidebarOpen = state;
     }
+}
+@code {
+    private string message;
+    private string type;
+
+    private string GetIcon() => type switch
+    {
+        "success" => "bi-check-circle-fill",
+        "error" => "bi-x-circle-fill",
+        "info" => "bi-info-circle-fill",
+        "warning" => "bi-exclamation-triangle-fill",
+        _ => "bi-bell-fill"
+    };
+
+    private string GetColor() => type switch
+    {
+        "success" => "text-success",
+        "error" => "text-danger",
+        "info" => "text-primary",
+        "warning" => "text-warning",
+        _ => "text-secondary"
+    };
+
+    protected override void OnInitialized()
+    {
+        Notif.OnNotify += ShowToast;
+    }
+
+    private async void ShowToast(string msg, string t)
+    {
+        message = msg;
+        type = t;
+
+        StateHasChanged();
+
+        await Task.Delay(3000);
+
+        message = null;
+        StateHasChanged();
+    }
+    public void Dispose()
+{
+    Notif.OnNotify -= ShowToast;
+}
 }

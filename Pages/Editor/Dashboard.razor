@@ -1,8 +1,6 @@
 ﻿@page "/Editor"
 @layout EditorLayout
 @attribute [Authorize(Roles = "Editor")]
-
-@using System.Security.Claims
 @inject AuthenticationStateProvider AuthStateProvider
 
 <h1>Editor Dashboard</h1>

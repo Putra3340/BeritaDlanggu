@@ -2,7 +2,7 @@
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
 @inject BeritaDlangguNetContext Db
-
+@inject NotificationService Notif
 <div class="dashboard-topbar">
     <h4>Manajemen Kategori</h4>
     <button class="btn btn-primary btn-sm" @onclick="() => OpenModal()">
@@ -21,7 +21,7 @@
                     </div>
                     <div class="d-flex gap-1">
                         <button class="action-btn edit" @onclick="() => OpenModal(cat.Id)" title="Edit"><i class="bi bi-pencil"></i></button>
-                        <button class="action-btn delete" onclick="deleteCategory(@cat.Id)" title="Hapus"><i class="bi bi-trash"></i></button>
+                        <button class="action-btn delete" @onclick="() => DeleteCategory(cat.Id)" title="Hapus"><i class="bi bi-trash"></i></button>
                     </div>
                 </div>
                 <div class="mb-2">
@@ -36,9 +36,19 @@
                     {
                         <div class="d-flex align-items-center justify-content-between py-1">
                             <span class="small">@subcat.Name</span>
-                            <button class="btn btn-sm text-danger p-0" @onclick="() => DeleteSubCategory(subcat.Id)" title="Hapus">
-                                <i class="bi bi-x-circle" style="font-size:14px"></i>
-                            </button>
+                            <div class="d-flex gap-1">
+                                <!-- Edit -->
+                                <button class="btn btn-sm btn-light border edit-btn"
+                                        @onclick="() => OpenSubModal(cat.Id, subcat.Id)" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <!-- Delete -->
+                                <button class="btn btn-sm btn-light border delete-btn"
+                                        @onclick="() => DeleteSubCategory(subcat.Id)" title="Hapus">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     }
                 </div>
@@ -92,14 +102,12 @@
                 <button type="button" class="btn-close" @onclick="CloseSubModal"></button>
             </div>
             <div class="modal-body">
-                <form id="subcatForm">
-                    <input type="hidden" id="subcatParentId">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Nama Sub-Kategori</label>
-                        <input type="text" class="form-control" id="subcatName" required @bind="catSubName">
-                    </div>
-                    <button class="btn btn-primary w-100" @onclick="SaveSubCategory"><i class="bi bi-check-circle me-2"></i>Simpan</button>
-                </form>
+                <input type="hidden" id="subcatParentId">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nama Sub-Kategori</label>
+                    <input type="text" class="form-control" id="subcatName" required @bind="catSubName">
+                </div>
+                <button class="btn btn-primary w-100" @onclick="SaveSubCategory"><i class="bi bi-check-circle me-2"></i>Simpan</button>
             </div>
         </div>
     </div>
@@ -191,6 +199,8 @@
 
     private void SaveCategory()
     {
+        if (!ValidateData())
+            return;
         if (isEdit)
         {
             var cat = Db.Categories.First(x => x.Id == catEditId);
@@ -203,7 +213,7 @@
             {
                 Name = catName,
                 Description = catDesc,
-                Slug = catName.ToLower().Replace(" ", "-"),
+                Slug = catName.GenerateSlug(),
                 CreatedAt = DateTime.Now
             });
         }
@@ -211,6 +221,31 @@
         Db.SaveChanges();
         CloseModal();
         ReloadCategory();
+    }
+    private bool ValidateData()
+    {
+        if (!isEdit && (Db.Categories.Any(x => x.Slug == catName.GenerateSlug()) || Db.Categories.Any(x => x.Name == catName)))
+        {
+            Notif.Show("Kategori sudah ada!", "error");
+            return false;
+        }
+        if (isEdit && (Db.Categories.Any(x => x.Slug == catName.GenerateSlug() && x.Id != catEditId) || Db.Categories.Any(x => x.Name == catName && x.Id != catEditId)))
+        {
+            Notif.Show("Kategori sudah ada!", "error");
+            return false;
+        }
+        if (catName.Length == 0)
+        {
+            Notif.Show("Nama Kategori wajib di isi!", "error");
+            return false;
+        }
+        if (catDesc.Length == 0)
+        {
+            Notif.Show("Deskripsi Kategori wajib di isi!", "error");
+            return false;
+        }
+
+        return true;
     }
 }
 @code {
@@ -255,9 +290,11 @@
 
     private void SaveSubCategory()
     {
+        if (!ValidateSubData())
+            return;
         if (isSubEdit)
         {
-            var cat = Db.Categories.First(x => x.Id == catEditId);
+            var cat = Db.Categories.First(x => x.Id == catSubEditId);
             cat.Name = catSubName;
         }
         else
@@ -265,14 +302,34 @@
             Db.Categories.Add(new BeritaDlanggu.Models.Categories
             {
                 Name = catSubName,
-                Slug = catSubName.ToLower().Replace(" ", "-"),
+                Slug = catSubName.GenerateSlug(),
                 ParentId = catParentId,
                 CreatedAt = DateTime.Now
             });
         }
 
         Db.SaveChanges();
-        CloseModal();
+        CloseSubModal();
         ReloadCategory();
+    }
+    private bool ValidateSubData()
+    {
+        if (!isSubEdit && (Db.Categories.Any(x => x.Slug == catSubName.GenerateSlug()) || Db.Categories.Any(x => x.Name == catSubName)))
+        {
+            Notif.Show("Kategori sudah ada!", "error");
+            return false;
+        }
+        if (isSubEdit && (Db.Categories.Any(x => x.Slug == catSubName.GenerateSlug() && x.Id != catSubEditId) || Db.Categories.Any(x => x.Name == catSubName && x.Id != catSubEditId)))
+        {
+            Notif.Show("Kategori sudah ada!", "error");
+            return false;
+        }
+        if (catSubName.Length == 0)
+        {
+            Notif.Show("Nama Kategori wajib di isi!", "error");
+            return false;
+        }
+
+        return true;
     }
 }

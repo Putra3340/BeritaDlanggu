@@ -1,4 +1,5 @@
 using BeritaDlanggu.Models;
+using BeritaDlanggu.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<BeritaDlangguNetContext>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<NotificationService>();
 
 var app = builder.Build();
 

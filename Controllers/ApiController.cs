@@ -131,5 +131,15 @@ namespace BeritaDlanggu.Controllers
             _context.SaveChanges();
             return Ok();
     }
+        [HttpGet("/test")]
+        public async Task<IActionResult> Test()
+        {
+            var hash = Argon2.Hash("123");
+            var valid = Argon2.Verify("123", hash);
+
+            Console.WriteLine(hash);
+            Console.WriteLine(valid);
+            return Ok(valid);
+        }
 }
 }
