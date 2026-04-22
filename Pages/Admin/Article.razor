@@ -1,9 +1,81 @@
 ﻿@page "/Admin/Article"
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
+@inject NavigationManager Nav
+@inject BeritaDlangguNetContext Db
+@inject IJSRuntime JS
+@inject IWebHostEnvironment Env
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NotificationService Notif
 
-<h3>Article</h3>
-
+<div class="dashboard-topbar">
+    <h4>Manajemen Artikel</h4>
+    <button class="btn btn-primary btn-sm">
+        <i class="bi bi-plus me-1"></i>Tambah Baru
+    </button>
+</div>
+<div class="dashboard-table">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Judul</th>
+                    <th>Kategori</th>
+                    <th>Status</th>
+                    <th>Tanggal</th>
+                    <th>Views</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var article in _articles)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="@article.ThumbnailUrl" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px">
+                                <div>
+                                    <strong style="font-size:13.5px">@article.Title</strong>
+                                    @if (article.IsFeatured)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1" style="font-size:10px">Featured</span>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge" style="background:var(--primary-lightest);color:var(--primary);font-weight:600">@article.Cat.Name</span></td>
+                        <td><span class="status-badge published">@(article.Status == (int)ArticleStatus.Draft ? "Draft" : "Published")</span></td>
+                        <td class="text-muted" style="font-size:13px">@article.CreatedAt.ToString("dd MMMM yyyy")</td>
+                        <td class="text-muted" style="font-size:13px">@article.Views</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="action-btn view" title="Preview"><i class="bi bi-eye"></i></button>
+                                <a href="/Admin/ArticleForm/@article.Id" class="action-btn edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                                <button class="action-btn delete" title="Hapus" @onclick="() => DeleteArticle(article.Id)"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
 @code {
-
+    private List<BeritaDlanggu.Models.Articles> _articles;
+    protected override void OnInitialized()
+    {
+        _articles = Db.Articles
+            .Include(a => a.Cat)
+            .ToList();
+    }
+    private void DeleteArticle(int id)
+    {
+        var article = Db.Articles.Find(id);
+        if (article != null)
+        {
+            Db.Articles.Remove(article);
+            Db.SaveChanges();
+            Notif.Show("Artikel berhasil dihapus","success");
+        }
+    }
 }

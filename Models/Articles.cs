@@ -7,6 +7,10 @@ public partial class Articles
 {
     public int Id { get; set; }
 
+    public int CatId { get; set; }
+
+    public int? SubCatId { get; set; }
+
     public string Title { get; set; } = null!;
 
     public string Slug { get; set; } = null!;
@@ -37,7 +41,9 @@ public partial class Articles
 
     public virtual Users Author { get; set; } = null!;
 
+    public virtual Categories Cat { get; set; } = null!;
+
     public virtual ICollection<Comments> Comments { get; set; } = new List<Comments>();
 
-    public virtual ICollection<Categories> Category { get; set; } = new List<Categories>();
+    public virtual SubCategories? SubCat { get; set; }
 }

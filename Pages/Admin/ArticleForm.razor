@@ -1,4 +1,4 @@
-﻿@page "/Admin/CreateArticle"
+﻿@page "/Admin/ArticleForm/{Id:int?}"
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
 @inject BeritaDlangguNetContext Db
@@ -10,12 +10,12 @@
 
 <div class="dashboard-topbar">
     <div>
-        <h4 id="formTitle">Tulis Artikel Baru</h4>
+        <h4>@(Id == null ? "Tulis Artikel Baru" : "Edit Artikel")</h4>
         <p class="text-muted mb-0 small">Buat konten menarik untuk pembaca</p>
     </div>
     <div class="d-flex gap-2">
-        <button class="btn btn-outline-primary btn-sm" id="previewBtn" @onclick="SaveArticle"><i class="bi bi-eye me-1"></i>Preview</button>
-        <a href="index.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
+        <button class="btn btn-outline-primary btn-sm" id="previewBtn" @onclick="OpenPreview"><i class="bi bi-eye me-1"></i>Preview</button>
+        <a href="/Admin/Article" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left me-1"></i>Kembali</a>
     </div>
 </div>
 <div class="row g-4">
@@ -115,16 +115,61 @@
         <!-- Actions -->
         <div class="d-grid gap-2">
             <button class="btn btn-primary" @onclick="SaveArticle"><i class="bi bi-check-circle me-2"></i>Simpan Artikel</button>
-            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Admin'"><i class="bi bi-x-circle me-2"></i>Batal</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Admin/Article'"><i class="bi bi-x-circle me-2"></i>Batal</button>
         </div>
     </div>
 </div>
+<!-- Preview Modal -->
+<div class="modal fade preview-modal @(IsPreviewShow ? "show d-block" : "")" tabindex="-1"
+     style="background-color:@(IsPreviewShow ? "rgba(0,0,0,0.5)" : "transparent")">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Preview Artikel</h5>
+                <button type="button" class="btn-close" @onclick="ClosePreview"></button>
+            </div>
+            <div class="modal-body">
+                <div class="article-page">
+                    <div class="article-header">
+                        <span class="article-category">@PreviewCategoryName</span>
+                        <h1 style="font-size:1.5rem">@article.Title</h1>
+                    </div>
+                    <div class="article-featured-img"><img src="@imagePreviewUrl" alt="@article.Title"></div>
+                    <div class="article-content">
+                        @((MarkupString)PreviewContent)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@code{
+    private bool IsPreviewShow = false;
+    private string PreviewContent = "";
+    private string PreviewCategoryName = "KATEGORI BELUM DIPILIH";
+    private void OpenPreview()
+    {
+        PreviewContent = article.Content;
+        if(SelectedCategoryId != 0)
+            PreviewCategoryName = Db.Categories.Find(SelectedCategoryId).Name;
+        IsPreviewShow = true;
+    }
+    private void ClosePreview()
+    {
+        IsPreviewShow = false;
+        
+    }
+}
 @code {
-    private Articles article = new();
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? Id { get; set; }
+    private bool IsEdit = false;
+    private Articles article;
 
     private List<BeritaDlanggu.Models.Categories> categories;
-    private List<BeritaDlanggu.Models.Categories> subcategories;
-    private int SelectedCategoryId { get; set { field = value; subcategories = Db.Categories.Where(x => x.ParentId == value).ToList(); } }
+    private List<BeritaDlanggu.Models.SubCategories> subcategories;
+    private int SelectedCategoryId { get; set { field = value; subcategories = Db.SubCategories.Where(x => x.ParentId == value).ToList(); } }
     private int SelectedSubCategoryId;
 
 
@@ -135,14 +180,31 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if(Id != null)
+        {
+            article = Db.Articles
+    .Include(x => x.Cat)
+    .Include(c => c.SubCat)
+    .FirstOrDefault(x => x.Id == Id);
+            if(article != null)
+            {
+                IsEdit = true;
+                SelectedCategoryId = article.Cat.Id;
+                SelectedSubCategoryId = article.SubCat != null ? article.SubCat.Id : 0;
+                imagePreviewUrl = article.ThumbnailUrl;
+            }
+        }
+        if (article == null)
+            article = new();
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         user = authState.User;
 
-        categories = Db.Categories.Where(x => x.ParentId == null).ToList();
-        subcategories = Db.Categories.Where(x => x.ParentId != null).ToList();
+        categories = Db.Categories.ToList();
+        subcategories = Db.SubCategories.ToList();
 
         // Load categories and subcategories from database
     }
+
     private async Task OnImageSelected(InputFileChangeEventArgs e)
     {
         selectedImage = e.File;
@@ -160,6 +222,83 @@
     {
         try
         {
+            if(Id != null) // EDIT CHANGES
+            {
+                // title and slug
+                if (article.Title == null || article.Title.Length == 0)
+                {
+                    Notif.Show("Judul artikel harus di isi!", "error");
+                    return;
+                }
+                article.Slug = article.Title.GenerateSlug();
+                if (Db.Articles.Any(x => x.Slug == article.Slug || x.Title == article.Title))
+                {
+                    Notif.Show("Judul Berita Sudah ada, silahkan gunakan judul lain!", "error");
+                }
+                if (selectedImage != null)
+                {
+                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(selectedImage.Name)}";
+                    var folderPath = Path.Combine(Env.WebRootPath, "uploads", "thumbnails");
+
+                    if (!Directory.Exists(folderPath))
+                        Directory.CreateDirectory(folderPath);
+
+                    var filePath = Path.Combine(folderPath, fileName);
+
+                    using var stream = selectedImage.OpenReadStream(5 * 1024 * 1024);
+                    using var fs = new FileStream(filePath, FileMode.Create);
+                    await stream.CopyToAsync(fs);
+
+                    // save path to DB
+                    article.ThumbnailUrl = $"/uploads/thumbnails/{fileName}";
+                }
+                // excerpt
+                if (string.IsNullOrWhiteSpace(article.Excerpt))
+                {
+                    article.Excerpt = article.Title != null && article.Title.Length > 100 ? article.Title.Substring(0, 100) + "..." : article.Title;
+                }
+                article.MetaTitle = article.Title;
+                article.MetaDescription = article.Excerpt;
+
+                article.AuthorId = int.Parse(user.FindFirst("Id")?.Value);
+                article.UpdatedAt = DateTime.Now;
+
+                if (article.Status == (int)ArticleStatus.Published)
+                {
+                    article.PublishedAt = DateTime.Now;
+                }
+                var catedit = Db.Categories.Find(SelectedCategoryId);
+                if (catedit == null)
+                {
+                    Notif.Show("Kategori tidak ada!", "error");
+                    return;
+                }
+                article.Cat = catedit;
+                var subcatedit = Db.SubCategories.Find(SelectedSubCategoryId);
+                if (subcatedit != null)
+                    article.SubCat = subcatedit;
+
+                Db.Articles.Attach(article);
+                Db.Entry(article).State = EntityState.Modified;
+                Db.SaveChanges();
+
+                Notif.Show("Artikel berhasil disimpan!", "success");
+                Nav.NavigateTo("/Admin/Article");
+                return;
+            }
+
+            // title and slug
+            if (article.Title == null || article.Title.Length == 0)
+            {
+                Notif.Show("Judul artikel harus di isi!", "error");
+                return;
+            }
+
+            article.Slug = article.Title.GenerateSlug();
+            if (Db.Articles.Any(x => x.Slug == article.Slug || x.Title == article.Title))
+            {
+                Notif.Show("Judul Berita Sudah ada, silahkan gunakan judul lain!", "error");
+            }
 
             if (selectedImage != null)
             {
@@ -178,19 +317,18 @@
                 // save path to DB
                 article.ThumbnailUrl = $"/uploads/thumbnails/{fileName}";
             }
-
-            // generate slug
-            article.Slug = article.Title.GenerateSlug();
-            if(Db.Articles.Any(x=>x.Slug == article.Slug))
+            else
             {
-                // already exist
+                Notif.Show("Gambar Utama wajib di ada!", "error");
+                return;
             }
+
+
 
             // excerpt
             if (string.IsNullOrWhiteSpace(article.Excerpt))
             {
                 article.Excerpt = article.Title != null && article.Title.Length > 100 ? article.Title.Substring(0, 100) + "..." : article.Title;
-
             }
 
             // meta
@@ -208,8 +346,6 @@
             }
 
             // search category and subcategory from database
-            Console.WriteLine(SelectedCategoryId);
-            Console.WriteLine(SelectedSubCategoryId);
 
             var cat = Db.Categories.Find(SelectedCategoryId);
             if(cat == null)
@@ -217,13 +353,13 @@
                 Notif.Show("Kategori tidak ada!", "error");
                 return;
             }
-            article.Category.Add(cat);
-            var subcat = Db.Categories.Find(SelectedSubCategoryId);
+            article.Cat = cat;
+            var subcat = Db.SubCategories.Find(SelectedSubCategoryId);
             if (subcat != null)
-                article.Category.Add(subcat);
+                article.SubCat = subcat;
 
             Db.Articles.Add(article);
-            // Db.SaveChanges();
+            Db.SaveChanges();
 
             Notif.Show("Artikel berhasil disimpan!", "success");
             Nav.NavigateTo("/Admin/Article");
@@ -233,4 +369,6 @@
             Console.WriteLine(ex.Message);
         }
     }
+
+
 }

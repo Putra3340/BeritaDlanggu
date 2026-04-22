@@ -53,18 +53,18 @@
         <div class="settings-card">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <h5 class="fw-bold mb-0">Artikel Terbaru</h5>
-                <a href="../editor/index.html" class="small fw-semibold text-primary">Lihat Semua →</a>
+                <a href="/Admin/Article" class="small fw-semibold text-primary">Lihat Semua →</a>
             </div>
             @foreach (var item in LatestArticle)
             {
                 <div class="sidebar-item">
                     <div class="item-thumb">
-                        <img src="@item.Banner" alt="@item.Title">
+                        <img src="@item.ThumbnailUrl" alt="@item.Title">
                     </div>
                     <div class="item-content" style="flex:1">
                         <h6><a href="../editor/article-form.html?id=1">@item.Title</a></h6>
                         <span class="item-meta">
-                            <span class="status-badge published" style="font-size:10px;padding:2px 8px">published</span>
+                            <span class="status-badge @(item.Status == (int)ArticleStatus.Draft ? "draft" : "published")" style="font-size:10px;padding:2px 8px">@(item.Status == (int)ArticleStatus.Draft ? "Draft" : "Published")</span>
                             • @ToRelativeTime(item.CreatedAt)
                         </span>
                     </div>
@@ -85,7 +85,7 @@
     </div>
 </div>
 @code {
-    private List<ArticleViewModel> LatestArticle = new();
+    private List<BeritaDlanggu.Models.Articles> LatestArticle = new();
 
     protected override void OnInitialized()
     {
@@ -94,14 +94,6 @@
     .Where(a => a.Status == (byte)ArticleStatus.Published)
     .OrderByDescending(a => a.CreatedAt)
     .Take(10)
-    .Select(a => new ArticleViewModel
-    {
-        Id = a.Id,
-        Title = a.Title,
-        Content = a.Excerpt,
-        AuthorName = a.Author.FullName,
-        CreatedAt = a.CreatedAt
-    })
     .ToList();
     }
 

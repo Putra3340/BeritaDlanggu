@@ -16,13 +16,14 @@
             _objRef = DotNetObjectReference.Create(this);
 
             await JS.InvokeVoidAsync("richEditor.init", _id, _objRef);
-            await JS.InvokeVoidAsync("richEditor.setHtml", Value ?? "");
+            await JS.InvokeVoidAsync("richEditor.setHtml", _id, Value ?? "");
         }
     }
 
     [JSInvokable]
     public async Task NotifyChange(string html)
     {
+        Console.WriteLine("CONTENT: " + html);
         Value = html;
         await ValueChanged.InvokeAsync(html);
     }

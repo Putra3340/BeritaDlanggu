@@ -27,7 +27,7 @@ namespace BeritaDlanggu.Controllers
         Id = a.Id,
         Title = a.Title,
         Banner = scheme + a.ThumbnailUrl,
-        CategoryName = a.Category.FirstOrDefault(x=>x.ParentId == null).Name,
+        CategoryName = a.Cat.Name,
         Content = a.Excerpt,
         AuthorName = a.Author.FullName,
         CreatedAt = a.CreatedAt
@@ -60,7 +60,7 @@ namespace BeritaDlanggu.Controllers
     })
     .ToList();
             var announcements = _context.Articles
-    .Where(a => a.Category.Any(c => c.Slug == "pengumuman"))
+    .Where(a => a.Cat.Slug == "pengumuman" && a.Status == (int)ArticleStatus.Published)
     .OrderByDescending(a => a.CreatedAt)
     .Take(5)
     .Select(a => new ArticleViewModel

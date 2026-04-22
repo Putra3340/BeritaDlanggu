@@ -121,3 +121,27 @@ VALUES (N'20260420030716_InitialCreate', N'10.0.6');
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'
+
+EXEC sp_MSforeachtable 'DELETE FROM ?'
+
+EXEC sp_MSforeachtable 'ALTER TABLE ? CHECK CONSTRAINT ALL'
+
+
+DECLARE @sql NVARCHAR(MAX) = '';
+
+SELECT @sql += 
+'DBCC CHECKIDENT ([' + t.name + '], RESEED, 0);'
+FROM sys.tables t
+INNER JOIN sys.identity_columns ic ON t.object_id = ic.object_id;
+
+EXEC sp_executesql @sql;
+
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260422020440_BackupScheme', N'10.0.6');
+
+COMMIT;
+GO
+

@@ -17,6 +17,8 @@ public partial class BeritaDlangguNetContext : DbContext
 
     public virtual DbSet<ActivityLogs> ActivityLogs { get; set; }
 
+    public virtual DbSet<ArticleCategories> ArticleCategories { get; set; }
+
     public virtual DbSet<Articles> Articles { get; set; }
 
     public virtual DbSet<Categories> Categories { get; set; }
@@ -24,6 +26,8 @@ public partial class BeritaDlangguNetContext : DbContext
     public virtual DbSet<Comments> Comments { get; set; }
 
     public virtual DbSet<Settings> Settings { get; set; }
+
+    public virtual DbSet<SubCategories> SubCategories { get; set; }
 
     public virtual DbSet<Users> Users { get; set; }
 
@@ -42,6 +46,13 @@ public partial class BeritaDlangguNetContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        modelBuilder.Entity<ArticleCategories>(entity =>
+        {
+            entity.HasKey(e => new { e.ArticleId, e.CategoryId });
+
+            entity.HasIndex(e => e.CategoryId, "IX_ArticleCategories_CategoryId");
+        });
+
         modelBuilder.Entity<Articles>(entity =>
         {
             entity.HasIndex(e => e.AuthorId, "IX_Articles_AuthorId");
@@ -52,25 +63,19 @@ public partial class BeritaDlangguNetContext : DbContext
                 .HasForeignKey(d => d.AuthorId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
-            entity.HasMany(d => d.Category).WithMany(p => p.Article)
-                .UsingEntity<Dictionary<string, object>>(
-                    "ArticleCategories",
-                    r => r.HasOne<Categories>().WithMany().HasForeignKey("CategoryId"),
-                    l => l.HasOne<Articles>().WithMany().HasForeignKey("ArticleId"),
-                    j =>
-                    {
-                        j.HasKey("ArticleId", "CategoryId");
-                        j.HasIndex(new[] { "CategoryId" }, "IX_ArticleCategories_CategoryId");
-                    });
+            entity.HasOne(d => d.Cat).WithMany(p => p.Articles)
+                .HasForeignKey(d => d.CatId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Articles_Categories");
+
+            entity.HasOne(d => d.SubCat).WithMany(p => p.Articles)
+                .HasForeignKey(d => d.SubCatId)
+                .HasConstraintName("FK_Articles_SubCategories");
         });
 
         modelBuilder.Entity<Categories>(entity =>
         {
-            entity.HasIndex(e => e.ParentId, "IX_Categories_ParentId");
-
             entity.HasIndex(e => e.Slug, "IX_Categories_Slug").IsUnique();
-
-            entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent).HasForeignKey(d => d.ParentId);
         });
 
         modelBuilder.Entity<Comments>(entity =>
@@ -83,6 +88,17 @@ public partial class BeritaDlangguNetContext : DbContext
         modelBuilder.Entity<Settings>(entity =>
         {
             entity.HasIndex(e => e.Key, "IX_Settings_Key").IsUnique();
+        });
+
+        modelBuilder.Entity<SubCategories>(entity =>
+        {
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.Slug).HasMaxLength(450);
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.SubCategories)
+                .HasForeignKey(d => d.ParentId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SubCategories_Categories");
         });
 
         modelBuilder.Entity<Users>(entity =>

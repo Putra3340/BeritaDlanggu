@@ -13,15 +13,9 @@ public partial class Categories
 
     public string? Description { get; set; }
 
-    public int? ParentId { get; set; }
-
-    public int SortOrder { get; set; }
-
     public DateTime CreatedAt { get; set; }
 
-    public virtual ICollection<Categories> InverseParent { get; set; } = new List<Categories>();
+    public virtual ICollection<Articles> Articles { get; set; } = new List<Articles>();
 
-    public virtual Categories? Parent { get; set; }
-
-    public virtual ICollection<Articles> Article { get; set; } = new List<Articles>();
+    public virtual ICollection<SubCategories> SubCategories { get; set; } = new List<SubCategories>();
 }

@@ -124,22 +124,18 @@
 
     public void ReloadCategory()
     {
-        var allCategories = Db.Categories.ToList();
-        categories = allCategories
-            .Where(x => x.ParentId == null)
+        categories = Db.Categories
             .Select(parent => new CategoryTreeDto
             {
                 Id = parent.Id,
                 Name = parent.Name,
                 Description = parent.Description,
-                ArticleCount = parent.Article.Count(),
-                Children = allCategories
-                    .Where(c => c.ParentId == parent.Id)
+                ArticleCount = parent.Articles.Count(),
+                Children = Db.SubCategories.Where(x=>x.ParentId == parent.Id)
                     .Select(child => new CategoryTreeDto
                     {
                         Id = child.Id,
                         Name = child.Name,
-                        Description = child.Description
                     })
                     .ToList()
             })
@@ -190,6 +186,12 @@
     private void DeleteCategory(int id)
     {
         var cat = Db.Categories.First(x => x.Id == id);
+        if(Db.SubCategories.Any(x=>x.ParentId == id))
+        {
+            Notif.Show("Hapus Sub-Kategori Terlebih dahulu!", "error");
+            return;
+        }
+
         Db.Categories.Remove(cat);
         Db.SaveChanges();
 
@@ -265,7 +267,7 @@
 
         if (isSubEdit)
         {
-            var cat = Db.Categories.First(x => x.Id == id);
+            var cat = Db.SubCategories.First(x => x.Id == id);
             catSubName = cat.Name;
         }
         else
@@ -282,8 +284,13 @@
     }
     private void DeleteSubCategory(int id)
     {
-        var cat = Db.Categories.First(x => x.Id == id);
-        Db.Categories.Remove(cat);
+        var cat = Db.SubCategories.First(x => x.Id == id);
+        if(Db.Articles.Any(x=>x.SubCatId == id))
+        {
+            Notif.Show("Hapus Artikel dengan Sub-Kategori ini Terlebih dahulu!", "error");
+            return;
+        }
+        Db.SubCategories.Remove(cat);
         Db.SaveChanges();
         ReloadCategory();
     }
@@ -294,17 +301,17 @@
             return;
         if (isSubEdit)
         {
-            var cat = Db.Categories.First(x => x.Id == catSubEditId);
+            var cat = Db.SubCategories.First(x => x.Id == catSubEditId);
             cat.Name = catSubName;
         }
         else
         {
-            Db.Categories.Add(new BeritaDlanggu.Models.Categories
+            Db.SubCategories.Add(new BeritaDlanggu.Models.SubCategories
             {
                 Name = catSubName,
                 Slug = catSubName.GenerateSlug(),
-                ParentId = catParentId,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                ParentId = catParentId
             });
         }
 
@@ -314,12 +321,12 @@
     }
     private bool ValidateSubData()
     {
-        if (!isSubEdit && (Db.Categories.Any(x => x.Slug == catSubName.GenerateSlug()) || Db.Categories.Any(x => x.Name == catSubName)))
+        if (!isSubEdit && (Db.SubCategories.Any(x => x.Slug == catSubName.GenerateSlug()) || Db.SubCategories.Any(x => x.Name == catSubName)))
         {
             Notif.Show("Kategori sudah ada!", "error");
             return false;
         }
-        if (isSubEdit && (Db.Categories.Any(x => x.Slug == catSubName.GenerateSlug() && x.Id != catSubEditId) || Db.Categories.Any(x => x.Name == catSubName && x.Id != catSubEditId)))
+        if (isSubEdit && (Db.SubCategories.Any(x => x.Slug == catSubName.GenerateSlug() && x.Id != catSubEditId) || Db.SubCategories.Any(x => x.Name == catSubName && x.Id != catSubEditId)))
         {
             Notif.Show("Kategori sudah ada!", "error");
             return false;

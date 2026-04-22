@@ -9,7 +9,11 @@ builder.Services.AddControllersWithViews();
 
 // Blazor Server
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+builder.Services.AddServerSideBlazor()
+    .AddHubOptions(options =>
+    {
+        options.MaximumReceiveMessageSize = 30 * 1024 * 1024;
+    });
 
 // Auth (needed later)
 builder.Services.AddAuthentication("Cookies")
