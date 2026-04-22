@@ -1,8 +1,88 @@
 ﻿@page "/Admin/Logs"
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
-<h3>Logs</h3>
+@inject BeritaDlangguNetContext Db
+<div class="dashboard-topbar">
+    <h4>Activity Log</h4>
+    <div class="d-flex gap-2">
+        <select class="form-select form-select-sm" id="logFilterType" style="width:auto" @bind="FilterAction">
+            <option value="">Semua Aksi</option>
+            <option value="login">Login</option>
+            <option value="create">Create</option>
+            <option value="update">Update</option>
+            <option value="delete">Delete</option>
+        </select>
+    </div>
+</div>
+<div class="settings-card">
+    @if(activityList == null || activityList.Count == 0)
+    {
+        <div class="empty-state"><i class="bi bi-clock-history"></i><h5>Tidak ada log</h5></div>
+    }
+    else
+    {
+        @foreach (var log in activityList)
+        {
+            <div class="log-item">
+                <div class="log-icon @log.Action">
+                    @if(log.Action == "login")
+                    {
+                        <i class="bi bi-box-arrow-in-right"></i>
+                    }
+                    else if(log.Action == "create")
+                    {
+                        <i class="bi bi-plus-circle"></i>
+                    }else if(log.Action == "update")
+                    {
+                        <i class="bi bi-pencil-square"></i>
+                    }
+                    else if(log.Action == "delete")
+                    {
+                        <i class="bi bi-trash"></i>
+                    }
+                    )
+                </div>
+                <div class="log-content" style="flex:1">
+                    <h6>@log.Details</h6>
+                    <p><i class="bi bi-person me-1"></i>@log.User.Username • <i class="bi bi-clock ms-1 me-1"></i>@ToRelativeTime(log.Timestamp)</p>
+                </div>
+            </div>
+        }
+    }
+</div>
+@code{
+    private List<ActivityLogs> activityList;
+    private string FilterAction { get; set { 
+        field = value;
+        activityList = Db.ActivityLogs.Include(x => x.User).Where(x=>x.Action.Contains(field)).OrderByDescending(a => a.Timestamp).ToList();
+    } } = "";
+    protected override Task OnInitializedAsync()
+    {
+        activityList = Db.ActivityLogs.Include(x=>x.User).OrderByDescending(a => a.Timestamp).ToList();
+        return base.OnInitializedAsync();
+    }
+    public string ToRelativeTime(DateTime input)
+    {
+        var ts = DateTime.Now - input;
 
-@code {
+        if (ts.TotalSeconds < 60)
+            return $"{(int)ts.TotalSeconds} detik lalu";
 
+        if (ts.TotalMinutes < 60)
+            return $"{(int)ts.TotalMinutes} menit lalu";
+
+        if (ts.TotalHours < 24)
+            return $"{(int)ts.TotalHours} jam lalu";
+
+        if (ts.TotalDays < 7)
+            return $"{(int)ts.TotalDays} hari lalu";
+
+        if (ts.TotalDays < 30)
+            return $"{(int)(ts.TotalDays / 7)} minggu lalu";
+
+        if (ts.TotalDays < 365)
+            return $"{(int)(ts.TotalDays / 30)} bulan lalu";
+
+        return $"{(int)(ts.TotalDays / 365)} tahun lalu";
+    }
 }

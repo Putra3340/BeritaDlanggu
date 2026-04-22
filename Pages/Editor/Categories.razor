@@ -1,6 +1,6 @@
-﻿@page "/Admin/Categories"
-@layout AdminLayout
-@attribute [Authorize(Roles = "Admin")]
+﻿@page "/Editor/Categories"
+@layout EditorLayout
+@attribute [Authorize(Roles = "Editor")]
 @inject BeritaDlangguNetContext Db
 @inject NotificationService Notif
 @inject IHttpContextAccessor HttpContextAccessor
@@ -137,7 +137,7 @@
                 Name = parent.Name,
                 Description = parent.Description,
                 ArticleCount = parent.Articles.Count(),
-                Children = Db.SubCategories.Where(x=>x.ParentId == parent.Id)
+                Children = Db.SubCategories.Where(x => x.ParentId == parent.Id)
                     .Select(child => new CategoryTreeDto
                     {
                         Id = child.Id,
@@ -192,7 +192,7 @@
     private void DeleteCategory(int id)
     {
         var cat = Db.Categories.First(x => x.Id == id);
-        if(Db.SubCategories.Any(x=>x.ParentId == id))
+        if (Db.SubCategories.Any(x => x.ParentId == id))
         {
             Notif.Show("Hapus Sub-Kategori Terlebih dahulu!", "error");
             return;
@@ -323,7 +323,7 @@
     private void DeleteSubCategory(int id)
     {
         var cat = Db.SubCategories.First(x => x.Id == id);
-        if(Db.Articles.Any(x=>x.SubCatId == id))
+        if (Db.Articles.Any(x => x.SubCatId == id))
         {
             Notif.Show("Hapus Artikel dengan Sub-Kategori ini Terlebih dahulu!", "error");
             return;

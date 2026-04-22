@@ -1,12 +1,144 @@
 ﻿@inherits LayoutComponentBase
+@inject NotificationService Notif
+@inject BeritaDlangguNetContext Db
+<div id="app-toast"
+     class="toast-notification @type @(string.IsNullOrEmpty(message) ? "" : "show")">
 
-<div style="display:flex;">
-    <aside style="width:200px;background:#2c3e50;color:white;padding:10px;">
-        <h3>Editor</h3>
-        <a href="/editor">Dashboard</a>
+    <i class="bi @GetIcon() @GetColor()"></i>
+    <span>@message</span>
+
+</div>
+<div class="dashboard-wrapper">
+    <aside class="dashboard-sidebar @(isSidebarOpen ? "show" : "") @(string.IsNullOrEmpty(message) ? "" : "show")">
+        <div class="sidebar-brand">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;">S1</div>
+            <div>
+                <h5>Admin Panel</h5>
+                <small>SMKN 1 Dlanggu</small>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-label">Dashboard</div>
+            <div class="nav-item">
+                <NavLink href="/Editor" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active">
+                    <i class="bi bi-speedometer2"></i> Overview
+                </NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Editor/ArticleForm" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-plus-circle"></i>Tulis Artikel</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Editor/Categories" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-tags"></i>Kategori</NavLink>
+            </div>
+            <div class="nav-label">Lainnya</div>
+            <div class="nav-item">
+                <NavLink href="/" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-globe"></i>Lihat Website</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Auth/Logout" onclick="logout()" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-box-arrow-left"></i>Logout</NavLink>
+            </div>
+        </nav>
     </aside>
 
-    <main style="padding:20px;">
-        @Body
+    <main class="dashboard-main">
+        <button class="btn btn-primary d-lg-none mb-3"
+                @onclick="() => ToggleSidebar(true)">
+            <i class="bi bi-list"></i>
+        </button>
+        <div @onclick="() => ToggleSidebar(false)">
+            @Body
+        </div>
     </main>
+    <script>
+            document.documentElement.style.setProperty('--primary', '@PrimaryColor');
+            document.documentElement.style.setProperty('--primary-light', '@Adjust(PrimaryColor, 20)');
+            document.documentElement.style.setProperty('--primary-lighter', '@Adjust(PrimaryColor, 40)');
+            document.documentElement.style.setProperty('--primary-lightest', '@Adjust(PrimaryColor, 70)');
+            document.documentElement.style.setProperty('--primary-dark', '@Adjust(PrimaryColor, -15)');
+            document.documentElement.style.setProperty('--primary-darker', '@Adjust(PrimaryColor, -30)');
+
+            document.documentElement.style.setProperty('--accent', '@AccentColor');
+            document.documentElement.style.setProperty('--accent-light', '@Adjust(AccentColor, 25)');
+            document.documentElement.style.setProperty('--accent-dark', '@Adjust(AccentColor, 25)');
+    </script>
 </div>
+@code {
+    private string PrimaryColor = "#711e76";
+    private string AccentColor = "#ba8fb8";
+    string Adjust(string hex, int percent)
+    {
+        hex = hex.Replace("#", "");
+        int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+        int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+        int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+
+        int AdjustChannel(int c)
+        {
+            return Math.Clamp(c + (int)(percent / 100.0 * 255), 0, 255);
+        }
+
+        r = AdjustChannel(r);
+        g = AdjustChannel(g);
+        b = AdjustChannel(b);
+
+        return $"#{r:X2}{g:X2}{b:X2}";
+    }
+}
+@code {
+    private bool isSidebarOpen = false;
+
+    private void ToggleSidebar(bool state)
+    {
+        isSidebarOpen = state;
+    }
+}
+@code {
+    private string message;
+    private string type;
+
+    private string GetIcon() => type switch
+    {
+        "success" => "bi-check-circle-fill",
+        "error" => "bi-x-circle-fill",
+        "info" => "bi-info-circle-fill",
+        "warning" => "bi-exclamation-triangle-fill",
+        _ => "bi-bell-fill"
+    };
+
+    private string GetColor() => type switch
+    {
+        "success" => "text-success",
+        "error" => "text-danger",
+        "info" => "text-primary",
+        "warning" => "text-warning",
+        _ => "text-secondary"
+    };
+
+    protected override void OnInitialized()
+    {
+        Notif.OnNotify += ShowToast;
+        var setcolor = Db.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ThemeColor);
+        if (setcolor != null)
+            PrimaryColor = setcolor.Value;
+        var setaccent = Db.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ThemeAccentColor);
+        if (setaccent != null)
+            AccentColor = setaccent.Value;
+    }
+
+    private async void ShowToast(string msg, string t)
+    {
+        message = msg;
+        type = t;
+
+        StateHasChanged();
+
+        await Task.Delay(3000);
+
+        message = null;
+        StateHasChanged();
+    }
+    public void Dispose()
+    {
+        Notif.OnNotify -= ShowToast;
+    }
+}

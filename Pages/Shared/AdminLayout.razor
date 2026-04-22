@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject NotificationService Notif
+@inject BeritaDlangguNetContext Db
 <div id="app-toast"
      class="toast-notification @type @(string.IsNullOrEmpty(message) ? "" : "show")">
 
@@ -64,8 +65,41 @@
             @Body
         </div>
     </main>
-</div>
+    <script>
+            document.documentElement.style.setProperty('--primary', '@PrimaryColor');
+            document.documentElement.style.setProperty('--primary-light', '@Adjust(PrimaryColor,20)');
+            document.documentElement.style.setProperty('--primary-lighter', '@Adjust(PrimaryColor,40)');
+            document.documentElement.style.setProperty('--primary-lightest', '@Adjust(PrimaryColor,70)');
+            document.documentElement.style.setProperty('--primary-dark', '@Adjust(PrimaryColor,-15)');
+            document.documentElement.style.setProperty('--primary-darker', '@Adjust(PrimaryColor,-30)');
 
+            document.documentElement.style.setProperty('--accent', '@AccentColor');
+            document.documentElement.style.setProperty('--accent-light', '@Adjust(AccentColor,25)');
+            document.documentElement.style.setProperty('--accent-dark', '@Adjust(AccentColor,25)');
+    </script>
+</div>
+@code{
+    private string PrimaryColor = "#711e76";
+    private string AccentColor = "#ba8fb8";
+    string Adjust(string hex, int percent)
+    {
+        hex = hex.Replace("#", "");
+        int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+        int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+        int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+
+        int AdjustChannel(int c)
+        {
+            return Math.Clamp(c + (int)(percent / 100.0 * 255), 0, 255);
+        }
+
+        r = AdjustChannel(r);
+        g = AdjustChannel(g);
+        b = AdjustChannel(b);
+
+        return $"#{r:X2}{g:X2}{b:X2}";
+    }
+}
 @code {
     private bool isSidebarOpen = false;
 
@@ -99,6 +133,12 @@
     protected override void OnInitialized()
     {
         Notif.OnNotify += ShowToast;
+        var setcolor = Db.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ThemeColor);
+        if (setcolor != null)
+            PrimaryColor = setcolor.Value;
+        var setaccent = Db.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ThemeAccentColor);
+        if (setaccent != null)
+            AccentColor = setaccent.Value;
     }
 
     private async void ShowToast(string msg, string t)

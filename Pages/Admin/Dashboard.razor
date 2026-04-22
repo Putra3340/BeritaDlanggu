@@ -2,7 +2,7 @@
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
 @inject BeritaDlangguNetContext Db
-
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="dashboard-topbar">
     <div>
@@ -10,8 +10,8 @@
         <p class="text-muted mb-0 small">Ringkasan sistem dan aktivitas terkini</p>
     </div>
     <div class="user-info">
-        <span id="adminName" class="d-none d-md-inline">Admin</span>
-        <div class="user-avatar" id="adminAvatar">A</div>
+        <span id="adminName" class="d-none d-md-inline">@(user?.Identity?.Name ?? "Admin")</span>
+        <div class="user-avatar" id="adminAvatar">@(user?.Identity?.Name?[0] ?? 'A')</div>
     </div>
 </div>
 
@@ -20,28 +20,28 @@
     <div class="col-sm-6 col-lg-3">
         <div class="stat-card">
             <div class="stat-icon purple"><i class="bi bi-file-earmark-text"></i></div>
-            <div class="stat-value" id="statArticles">0</div>
+            <div class="stat-value" id="statArticles">@TotalArticle</div>
             <div class="stat-label">Total Artikel</div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
         <div class="stat-card">
             <div class="stat-icon green"><i class="bi bi-people"></i></div>
-            <div class="stat-value" id="statUsers">0</div>
+            <div class="stat-value" id="statUsers">@TotalUser</div>
             <div class="stat-label">Total User</div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
         <div class="stat-card">
             <div class="stat-icon amber"><i class="bi bi-tags"></i></div>
-            <div class="stat-value" id="statCategories">0</div>
+            <div class="stat-value" id="statCategories">@TotalKategori</div>
             <div class="stat-label">Kategori</div>
         </div>
     </div>
     <div class="col-sm-6 col-lg-3">
         <div class="stat-card">
             <div class="stat-icon blue"><i class="bi bi-eye"></i></div>
-            <div class="stat-value" id="statTotalViews">0</div>
+            <div class="stat-value" id="statTotalViews">@TotalViews</div>
             <div class="stat-label">Total Views</div>
         </div>
     </div>
@@ -80,21 +80,70 @@
                 <h5 class="fw-bold mb-0">Aktivitas Terkini</h5>
                 <a href="logs.html" class="small fw-semibold text-primary">Lihat Semua →</a>
             </div>
-            <div id="recentLogs"></div>
+            @if (activityList == null || activityList.Count == 0)
+            {
+                <div class="empty-state"><i class="bi bi-clock-history"></i><h5>Tidak ada log</h5></div>
+            }
+            else
+            {
+                @foreach (var log in activityList)
+                {
+                    <div class="log-item">
+                        <div class="log-icon @log.Action">
+                            @if (log.Action == "login")
+                            {
+                                <i class="bi bi-box-arrow-in-right"></i>
+                            }
+                            else if (log.Action == "create")
+                            {
+                                <i class="bi bi-plus-circle"></i>
+                            }
+                            else if (log.Action == "update")
+                            {
+                                <i class="bi bi-pencil-square"></i>
+                            }
+                            else if (log.Action == "delete")
+                            {
+                                <i class="bi bi-trash"></i>
+                            }
+                            )
+                        </div>
+                        <div class="log-content" style="flex:1">
+                            <h6>@log.Details</h6>
+                            <p><i class="bi bi-person me-1"></i>@log.User.Username • <i class="bi bi-clock ms-1 me-1"></i>@ToRelativeTime(log.Timestamp)</p>
+                        </div>
+                    </div>
+                }
+            }
         </div>
     </div>
 </div>
 @code {
-    private List<BeritaDlanggu.Models.Articles> LatestArticle = new();
+    private List<BeritaDlanggu.Models.Articles> LatestArticle;
 
-    protected override void OnInitialized()
+    private int TotalArticle = 0;
+    private int TotalUser = 0;
+    private int TotalKategori = 0;
+    private int TotalViews = 0;
+    private ClaimsPrincipal? user;
+
+
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
         LatestArticle = Db.Articles
     .Where(a => a.Status == (byte)ArticleStatus.Published)
     .OrderByDescending(a => a.CreatedAt)
-    .Take(10)
+    .Take(5)
     .ToList();
+
+        TotalArticle = Db.Articles.Where(a => a.Status == (int)ArticleStatus.Published).Count();
+        TotalUser = Db.Users.Where(x=>x.IsActive == true).Count();
+        TotalKategori = Db.Categories.Count() + Db.SubCategories.Count();
+        TotalViews = Db.Articles.Sum(x => x.Views);
+        activityList = Db.ActivityLogs.Include(x => x.User).OrderByDescending(a => a.Timestamp).Take(5).ToList();
+
     }
 
     public string ToRelativeTime(DateTime input)
@@ -121,4 +170,15 @@
 
         return $"{(int)(ts.TotalDays / 365)} tahun lalu";
     }
+}
+@code {
+    private List<ActivityLogs> activityList;
+    private string FilterAction
+    {
+        get; set
+        {
+            field = value;
+            activityList = Db.ActivityLogs.Include(x => x.User).Where(x => x.Action.Contains(field)).OrderByDescending(a => a.Timestamp).ToList();
+        }
+    } = "";
 }

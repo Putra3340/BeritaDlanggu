@@ -48,7 +48,17 @@ namespace BeritaDlanggu.Controllers
             var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync("Cookies", principal);
-
+            // Activity Log
+            var activity = new ActivityLogs
+            {
+                Action = "login",
+                Details = user.Username + " logged in",
+                IpAddress = HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+                UserId = user.Id,
+                Timestamp = DateTime.Now
+            };
+            _context.ActivityLogs.Add(activity);
+            _context.SaveChanges();
             return Redirect("/Admin");
         }
     }

@@ -1,21 +1,322 @@
 ﻿@page "/Editor"
 @layout EditorLayout
 @attribute [Authorize(Roles = "Editor")]
+@inject NavigationManager Nav
+@inject BeritaDlangguNetContext Db
+@inject IJSRuntime JS
+@inject IWebHostEnvironment Env
+@inject NotificationService Notif
+@inject IHttpContextAccessor HttpContextAccessor
 @inject AuthenticationStateProvider AuthStateProvider
 
-<h1>Editor Dashboard</h1>
+<div class="dashboard-topbar">
+    <div>
+        <h4>Editor Dashboard</h4>
+        <p class="text-muted mb-0 small">Ringkasan sistem dan aktivitas terkini</p>
+    </div>
+    <div class="user-info">
+        <span id="adminName" class="d-none d-md-inline">@(user?.Identity?.Name ?? "Editor")</span>
+        <div class="user-avatar" id="adminAvatar">@(user?.Identity?.Name?[0] ?? 'E')</div>
+    </div>
+</div>
 
-@if (user != null)
-{
-    <h3>Hello, @user.Identity?.Name 💖</h3>
-}
+<!-- Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="bi bi-file-earmark-text"></i></div>
+            <div class="stat-value" id="statArticles">@TotalArticle</div>
+            <div class="stat-label">Total Artikel</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-check-circle"></i></div>
+            <div class="stat-value" id="statUsers">@TotalPusblished</div>
+            <div class="stat-label">Total Published</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class="bi bi-pencil-square"></i></div>
+            <div class="stat-value" id="statCategories">@TotalDraft</div>
+            <div class="stat-label">Draft</div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="bi bi-eye"></i></div>
+            <div class="stat-value" id="statTotalViews">@TotalViews</div>
+            <div class="stat-label">Total Views</div>
+        </div>
+    </div>
+</div>
+<div class="d-flex align-items-center mb-3">
 
+    <!-- LEFT: Search (flex grow) -->
+    <div class="flex-grow-1 me-2">
+        <div class="input-group">
+            <span class="input-group-text bg-light border-0">
+                <i class="bi bi-search text-muted"></i>
+            </span>
+            <input type="text"
+                   class="form-control bg-light border-0"
+                   placeholder="Cari berita..."
+                   @bind="searchTerm"
+                   @bind:event="oninput" />
+        </div>
+    </div>
+
+    <!-- RIGHT: Buttons -->
+    <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-primary btn-sm" @onclick="GotoAddArticle">
+            <i class="bi bi-plus me-1"></i>Tambah Baru
+        </button>
+
+        <!-- add more buttons here -->
+        <button class="btn btn-outline-secondary btn-sm">
+            Filter
+        </button>
+    </div>
+
+</div>
+<div class="dashboard-table">
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Judul</th>
+                    <th>Kategori</th>
+                    <th>Status</th>
+                    <th>Tanggal</th>
+                    <th>Views</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var article in _pagedArticles)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="@article.ThumbnailUrl" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:6px">
+                                <div>
+                                    <strong style="font-size:13.5px">@article.Title</strong>
+                                    @if (article.IsFeatured)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1" style="font-size:10px">Featured</span>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge" style="background:var(--primary-lightest);color:var(--primary);font-weight:600">@article.Cat.Name</span></td>
+                        <td><span class="status-badge @(article.Status == (int)ArticleStatus.Draft ? "draft" : "published")">@(article.Status == (int)ArticleStatus.Draft ? "Draft" : "Published")</span></td>
+                        <td class="text-muted" style="font-size:13px">@article.CreatedAt.ToString("dd MMMM yyyy")</td>
+                        <td class="text-muted" style="font-size:13px">@article.Views</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <button class="action-btn view" title="Preview" @onclick="() => OpenPreview(article.Id)"><i class="bi bi-eye"></i></button>
+                                <a href="/Editor/ArticleForm/@article.Id" class="action-btn edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                                <button class="action-btn delete" title="Hapus" @onclick="() => DeleteArticle(article.Id)"><i class="bi bi-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <!-- Pagination -->
+    
+</div>
+<nav class="d-flex justify-content-center mt-3">
+    <ul class="pagination mb-0">
+
+        <!-- Prev -->
+        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+            <a class="page-link" @onclick="() => ChangePage(currentPage - 1)">‹</a>
+        </li>
+
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(currentPage == i ? "active" : "")">
+                <a class="page-link" @onclick="() => ChangePage(i)">@i</a>
+            </li>
+        }
+
+        <!-- Next -->
+        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+            <a class="page-link" @onclick="() => ChangePage(currentPage + 1)">›</a>
+        </li>
+
+    </ul>
+</nav>
+<!-- Preview Modal -->
+<div class="modal fade preview-modal @(IsPreviewShow ? "show d-block" : "")" tabindex="-1"
+     style="background-color:@(IsPreviewShow ? "rgba(0,0,0,0.5)" : "transparent")">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">Preview Artikel</h5>
+                <button type="button" class="btn-close" @onclick="ClosePreview"></button>
+            </div>
+            <div class="modal-body">
+                <div class="article-page">
+                    <div class="article-header">
+                        <span class="article-category">@PreviewCategoryName</span>
+                        <h1 style="font-size:1.5rem">@PreviewTitle</h1>
+                    </div>
+                    <div class="article-featured-img"><img src="@PreviewImage" alt="@PreviewTitle"></div>
+                    <div class="article-content">
+                        @((MarkupString)PreviewContent)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @code {
+    private bool IsPreviewShow = false;
+    private string PreviewTitle = "";
+    private string PreviewContent = "";
+    private string PreviewImage = "";
+    private string PreviewCategoryName = "KATEGORI BELUM DIPILIH";
+    private void OpenPreview(int id)
+    {
+        var article = Db.Articles.Find(id);
+
+
+        PreviewTitle = article.Title;
+        PreviewImage = article.ThumbnailUrl;
+        PreviewContent = article.Content;
+        PreviewCategoryName = article.Cat.Name;
+        IsPreviewShow = true;
+    }
+    private void ClosePreview()
+    {
+        IsPreviewShow = false;
+        
+    }
+}
+@code{
+    private List<Articles> _allArticles;
+    private List<Articles> _pagedArticles;
+
+    private string searchTerm { get; set { field = value; currentPage = 1; ApplyFilter(); } } = "";
+    private int currentPage = 1;
+    private int pageSize = 8;
+
+    private int totalPages => (int)Math.Ceiling(_filtered.Count / (double)pageSize);
+
+    private List<Articles> _filtered => string.IsNullOrWhiteSpace(searchTerm)
+        ? _allArticles
+        : _allArticles.Where(a =>
+            a.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            a.Content.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)
+        ).ToList();
+
+    private void ReloadArticles()
+    {
+        _allArticles = Db.Articles
+        .Include(a => a.Cat).OrderByDescending(x => x.CreatedAt)
+        .ToList();
+
+        ApplyFilter();
+    }
+    private void ApplyFilter()
+    {
+        var data = _filtered;
+
+        _pagedArticles = data
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+    }
+    private void ChangePage(int page)
+    {
+        if (page < 1 || page > totalPages)
+            return;
+
+        currentPage = page;
+        ApplyFilter();
+    }
+    private void DeleteArticle(int id)
+    {
+        var article = Db.Articles.Find(id);
+        if (article != null)
+        {
+            Db.Articles.Remove(article);
+            Db.SaveChanges();
+
+            // Activity Log
+            var activityedit = new ActivityLogs
+            {
+                Action = "delete",
+                Details = "Menghapus artikel: " + article.Title,
+                IpAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+                UserId = int.Parse(user.FindFirst("Id")?.Value),
+                Timestamp = DateTime.Now
+            };
+            Db.ActivityLogs.Add(activityedit);
+            Db.SaveChanges();
+            Notif.Show("Artikel berhasil dihapus", "success");
+
+        }
+        ReloadArticles();
+    }
+    private void GotoAddArticle()
+    {
+        Nav.NavigateTo("/Admin/ArticleForm");
+    }
+}
+@code {
+
+    private int TotalArticle = 0;
+    private int TotalPusblished = 0;
+    private int TotalDraft = 0;
+    private int TotalViews = 0;
     private ClaimsPrincipal? user;
+
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         user = authState.User;
+
+        TotalArticle = Db.Articles.Count();
+        TotalPusblished = Db.Articles.Where(a => a.Status == (int)ArticleStatus.Published).Count();
+        TotalDraft = Db.Articles.Where(a => a.Status == (int)ArticleStatus.Draft).Count();
+        TotalViews = Db.Articles.Sum(x => x.Views);
+
+        _allArticles = Db.Articles
+        .Include(a => a.Cat).OrderByDescending(x => x.CreatedAt)
+        .ToList();
+
+        ApplyFilter();
+    }
+
+    public string ToRelativeTime(DateTime input)
+    {
+        var ts = DateTime.Now - input;
+
+        if (ts.TotalSeconds < 60)
+            return $"{(int)ts.TotalSeconds} detik lalu";
+
+        if (ts.TotalMinutes < 60)
+            return $"{(int)ts.TotalMinutes} menit lalu";
+
+        if (ts.TotalHours < 24)
+            return $"{(int)ts.TotalHours} jam lalu";
+
+        if (ts.TotalDays < 7)
+            return $"{(int)ts.TotalDays} hari lalu";
+
+        if (ts.TotalDays < 30)
+            return $"{(int)(ts.TotalDays / 7)} minggu lalu";
+
+        if (ts.TotalDays < 365)
+            return $"{(int)(ts.TotalDays / 30)} bulan lalu";
+
+        return $"{(int)(ts.TotalDays / 365)} tahun lalu";
     }
 }

@@ -1,8 +1,194 @@
 ﻿@page "/Admin/Settings"
 @layout AdminLayout
 @attribute [Authorize(Roles = "Admin")]
-<h3>Settings</h3>
+@inject BeritaDlangguNetContext Db
+@inject NotificationService Notif
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthStateProvider
 
+<div class="dashboard-topbar">
+    <h4>Pengaturan Website</h4>
+    <button class="btn btn-primary btn-sm" @onclick="SaveChanges"><i class="bi bi-check-circle me-1"></i>Simpan Semua</button>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <!-- General Settings -->
+        <div class="settings-card">
+            <h5><i class="bi bi-globe me-2"></i>Pengaturan Umum</h5>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Nama Website</label>
+                <input type="text" class="form-control" @bind="WebsiteName">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Tagline</label>
+                <input type="text" class="form-control" @bind="Tagline">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Warna Tema</label>
+                <div class="d-flex align-items-center gap-3">
+                    <input type="color" class="form-control form-control-color color-preview" @bind="ThemeColor">
+                    <input type="text" class="form-control" @bind="ThemeColor" style="max-width:140px">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Warna Aksen</label>
+                <div class="d-flex align-items-center gap-3">
+                    <input type="color" class="form-control form-control-color color-preview" @bind="ThemeAccentColor">
+                    <input type="text" class="form-control" @bind="ThemeAccentColor" style="max-width:140px">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Reset Warna</label>
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-warning btn-sm" @onclick="ResetColor"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset Warna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <!-- Server Settings -->
+        <div class="settings-card">
+            <h5><i class="bi bi-hdd-network me-2"></i>Pengaturan Server</h5>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">External Websocket Endpoint</label>
+                <input type="text" class="form-control" id="settingApiEndpoint" @bind="IntagramIntegrationUrl">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Artikel per Halaman</label>
+                <input type="number" class="form-control" id="settingPostsPerPage" min="3" max="30" @bind="ArticlePerPage">
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="settings-card" style="border:1px solid #fca5a5">
+            <h5 class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Zona Berbahaya</h5>
+            <p class="text-muted small">Reset semua data ke default. Tindakan ini tidak dapat dibatalkan.</p>
+            <button class="btn btn-outline-danger btn-sm" id="resetDataBtn"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset Semua Data</button>
+        </div>
+    </div>
+</div>
 @code {
+    private string WebsiteName = "";
+    private string Tagline = "";
+    private string ThemeColor = "";
+    private string ThemeAccentColor = "";
+
+    private string IntagramIntegrationUrl = "";
+    private int ArticlePerPage;
+    private ClaimsPrincipal? user;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+
+        WebsiteName = Db.Settings.Where(x => x.Key == ServerSettingsKey.WebsiteName).Select(x => x.Value).FirstOrDefault() ?? "";
+        Tagline = Db.Settings.Where(x => x.Key == ServerSettingsKey.TagLine).Select(x => x.Value).FirstOrDefault() ?? "";
+        ThemeColor = Db.Settings.Where(x => x.Key == ServerSettingsKey.ThemeColor).Select(x => x.Value).FirstOrDefault() ?? "#711e76";
+        ThemeAccentColor = Db.Settings.Where(x => x.Key == ServerSettingsKey.ThemeAccentColor).Select(x => x.Value).FirstOrDefault() ?? "#ba8fb8";
+
+        IntagramIntegrationUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.WebsocketUrl).Select(x => x.Value).FirstOrDefault() ?? "";
+        ArticlePerPage = int.Parse(Db.Settings.Where(x => x.Key == ServerSettingsKey.ArticlePerPage).Select(x => x.Value).FirstOrDefault() ?? "9");
+    }
+    public void ResetColor()
+    {
+        ThemeColor = "#711e76";
+        ThemeAccentColor = "#ba8fb8";
+    }
+    public void ResetData()
+    {
+        Db.Articles.RemoveRange(Db.Articles);
+        Db.Categories.RemoveRange(Db.Categories);
+        Db.Users.RemoveRange(Db.Users);
+        Db.Settings.RemoveRange(Db.Settings);
+        Db.SaveChanges();
+        Notif.Show("Semua data berhasil di reset!", "success");
+        Nav.NavigateTo("/Admin/Settings", true);
+    }
+
+    public async Task SaveChanges()
+    {
+        if (!Validate())
+            return;
+
+
+        UpsertSetting(ServerSettingsKey.WebsiteName, WebsiteName);
+        UpsertSetting(ServerSettingsKey.TagLine, Tagline);
+        UpsertSetting(ServerSettingsKey.ThemeColor, ThemeColor);
+        UpsertSetting(ServerSettingsKey.ThemeAccentColor, ThemeAccentColor);
+        UpsertSetting(ServerSettingsKey.WebsocketUrl, IntagramIntegrationUrl);
+        UpsertSetting(ServerSettingsKey.ArticlePerPage, ArticlePerPage.ToString());
+
+        Db.SaveChanges();
+        // Activity Log
+        var activity = new ActivityLogs
+        {
+            Action = "update",
+            Details = "Mengubah pengaturan: " + WebsiteName,
+            IpAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+        Notif.Show("Pengaturan disimpan!. Halaman akan di refresh dalam beberapa detik","success");
+        await Task.Delay(3000);
+        Nav.Refresh();
+    }
+    void UpsertSetting(string key, string value)
+    {
+        var setting = Db.Settings.FirstOrDefault(x => x.Key == key);
+
+        if (setting == null)
+        {
+            Db.Settings.Add(new BeritaDlanggu.Models.Settings
+            {
+                Key = key,
+                Value = value,
+                UpdatedAt = DateTime.Now
+            });
+        }
+        else
+        {
+            setting.Value = value;
+            setting.UpdatedAt = DateTime.Now;
+        }
+    }
+    public bool Validate()
+    {
+        if (WebsiteName.IsNullOrEmpty())
+        {
+            Notif.Show("Nama Website Harus di isi!", "error");
+            return false;
+        }
+        if (Tagline.IsNullOrEmpty())
+        {
+            Notif.Show("Tagline Harus di isi!", "error");
+            return false;
+        }
+        if (ThemeColor.IsNullOrEmpty())
+        {
+            Notif.Show("Tema Warna Harus di isi!", "error ");
+            return false;
+        }
+        if (IntagramIntegrationUrl.IsNullOrEmpty())
+        {
+            Notif.Show("URL WebSocket Harus di isi!", "error ");
+            return false;
+
+        }
+        if (ArticlePerPage == 0)
+        {
+            Notif.Show("Jumlah Artikel per Halaman minimal 1!", "error ");
+            return false;
+            
+        }
+        return true;
+            
+    }
 
 }

@@ -3,6 +3,9 @@
 @attribute [Authorize(Roles = "Admin")]
 @inject BeritaDlangguNetContext Db
 @inject NotificationService Notif
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthStateProvider
+
 <div class="dashboard-topbar">
     <h4>Manajemen User</h4>
     <button class="btn btn-primary btn-sm" @onclick="() => OpenModal()">
@@ -104,10 +107,14 @@
 
 @code {
     private List<BeritaDlanggu.Models.Users> UserList;
+    private ClaimsPrincipal? user;
+
     private bool AdminMoreThanOne = false;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
         UserList = Db.Users.ToList();
         AdminMoreThanOne = Db.Users.Where(x => x.Role == "Admin").Count() > 1;
     }
@@ -169,7 +176,17 @@
         var user = Db.Users.First(x => x.Id == id);
         Db.Users.Remove(user);
         Db.SaveChanges();
-
+        // Activity Log
+        var activity = new ActivityLogs
+        {
+            Action = "delete",
+            Details = "Menghapus user: " + userFullname,
+            IpAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+            UserId = int.Parse(this.user.FindFirst("Id")?.Value),
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
         ReloadUser();
 
     }
@@ -191,9 +208,17 @@
             user.Role = userRole;
             user.IsActive = userStatus == "active";
             user.Email = userEmail;
-
-            var test = Argon2.Verify(userPassword, user.PasswordHash);
-            Console.WriteLine(test);
+            // Activity Log
+            var activity = new ActivityLogs
+            {
+                Action = "edit",
+                Details = "Mengedit user: " + userFullname,
+                IpAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+                UserId = int.Parse(this.user.FindFirst("Id")?.Value),
+                Timestamp = DateTime.Now
+            };
+            Db.ActivityLogs.Add(activity);
+            Db.SaveChanges();
         }
         else
         {
@@ -207,6 +232,17 @@
                 IsActive = userStatus == "active",
                 CreatedAt = DateTime.Now
             });
+            // Activity Log
+            var activity = new ActivityLogs
+            {
+                Action = "create",
+                Details = "Menambahkan user: " + userFullname,
+                IpAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+                UserId = int.Parse(this.user.FindFirst("Id")?.Value),
+                Timestamp = DateTime.Now
+            };
+            Db.ActivityLogs.Add(activity);
+            Db.SaveChanges();
         }
 
         Db.SaveChanges();

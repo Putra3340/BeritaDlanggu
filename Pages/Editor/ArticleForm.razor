@@ -1,6 +1,6 @@
-﻿@page "/Admin/ArticleForm/{Id:int?}"
-@layout AdminLayout
-@attribute [Authorize(Roles = "Admin")]
+﻿@page "/Editor/ArticleForm/{Id:int?}"
+@layout EditorLayout
+@attribute [Authorize(Roles = "Editor")]
 @inject BeritaDlangguNetContext Db
 @inject IJSRuntime JS
 @inject IWebHostEnvironment Env
@@ -294,7 +294,7 @@
                 Db.ActivityLogs.Add(activityedit);
                 Db.SaveChanges();
                 Notif.Show("Artikel berhasil disimpan!", "success");
-                Nav.NavigateTo("/Admin/Article");
+                Nav.NavigateTo("/Editor");
                 return;
             }
 
@@ -385,7 +385,7 @@
             Db.SaveChanges();
 
             Notif.Show("Artikel berhasil disimpan!", "success");
-            Nav.NavigateTo("/Admin/Article");
+            Nav.NavigateTo("/Editor");
         }catch(Exception ex)
         {
             Notif.Show(ex.Message, "error");

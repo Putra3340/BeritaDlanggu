@@ -1,0 +1,35 @@
+﻿@inject IJSRuntime JS
+
+<div id="@_id" style="height:800px;"></div>
+
+@code {
+    private string _id = "editor_" + Guid.NewGuid().ToString("N");
+    private DotNetObjectReference<RichTextEditor>? _objRef;
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _objRef = DotNetObjectReference.Create(this);
+
+            await JS.InvokeVoidAsync("richEditor.init", _id, _objRef);
+            await JS.InvokeVoidAsync("richEditor.setHtml", _id, Value ?? "");
+        }
+    }
+
+    [JSInvokable]
+    public async Task NotifyChange(string html)
+    {
+        Console.WriteLine("CONTENT: " + html);
+        Value = html;
+        await ValueChanged.InvokeAsync(html);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _objRef?.Dispose();
+    }
+}

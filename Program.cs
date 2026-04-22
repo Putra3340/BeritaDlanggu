@@ -29,6 +29,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

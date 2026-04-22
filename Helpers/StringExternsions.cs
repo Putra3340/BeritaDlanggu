@@ -46,5 +46,12 @@ namespace BeritaDlanggu.Helpers
 
             return sb.ToString().Normalize(NormalizationForm.FormC);
         }
+
+        public static bool IsNullOrEmpty(this string a)
+        {
+            if (a == null || a == string.Empty || a == "")
+                return true;
+            return false;
+        }
     }
 }
