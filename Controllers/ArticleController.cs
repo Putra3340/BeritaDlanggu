@@ -42,6 +42,16 @@ namespace BeritaDlanggu.Controllers
                 HttpContext.Session.SetString($"viewed_{article.Id}", "1");
                 _context.SaveChanges();
             }
+
+            var scheme = $"{Request.Scheme}://{Request.Host}";
+            ViewData["MetaTitle"] = article.Title;
+            ViewData["MetaDesc"] = article.Excerpt;
+            ViewData["MetaKeyword"] = article.Excerpt ;
+            ViewData["MetaAuthor"] = article.Author.FullName;
+            ViewData["MetaRobot"] = "index, follow";
+            ViewData["MetaImage"] = scheme + "/icon-dlanggu.png";
+            ViewData["MetaUrl"] = scheme;
+            ViewData["MetaType"] = "website";
             return View(article);
         }
     }

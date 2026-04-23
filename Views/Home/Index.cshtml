@@ -150,7 +150,7 @@
                     {
                         @foreach (var cat in ViewData["CatList"] as List<Categories>)
                         {
-                            <a href="/Category/@cat.Slug" class="category-chip">
+                            <a href="/Kategori/@cat.Slug" class="category-chip">
                                 @cat.Name
                                 <span class="ms-1 opacity-50">(@cat.SubCategories.Count())</span>
                             </a>

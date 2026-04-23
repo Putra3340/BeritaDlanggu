@@ -1,93 +1,75 @@
-﻿<section class="container mt-4 mb-5">
+﻿@using BeritaDlanggu.Models.ViewModels
+@model CategoryViewModel
+<section class="container mt-4 mb-5">
     <!-- Category Header -->
     <div class="category-header fade-in" id="categoryHeader">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-2" style="--bs-breadcrumb-divider-color:rgba(255,255,255,0.5)">
-                <li class="breadcrumb-item"><a href="index.html" style="color:rgba(255,255,255,0.8)">Beranda</a></li>
-                <li class="breadcrumb-item active" style="color:#fff" id="breadcrumbCat">Berita Sekolah</li>
+                <li class="breadcrumb-item"><a href="/" style="color:rgba(255,255,255,0.8)">Beranda</a></li>
+                <li class="breadcrumb-item active" style="color:#fff" id="breadcrumbCat">@(Model.CurrentCategory != null ? Model.CurrentCategory.Name : "Kategori")</li>
             </ol>
         </nav>
-        <h1 id="categoryTitle">Berita Sekolah</h1>
-        <p id="categoryDesc">Informasi terkini seputar kegiatan sekolah</p>
+        <h1 id="categoryTitle">@(Model.CurrentCategory != null ? Model.CurrentCategory.Name : "Semua Berita")@(Model.CurrentSubCategory != null ? $" - {Model.CurrentSubCategory.Name}" : "")</h1>
+        <p id="categoryDesc">@(Model.CurrentCategory != null ? Model.CurrentCategory.Name : "Menampilkan semua berita terbaru dari SMKN 1 Dlanggu")</p>
     </div>
 
-    <!-- Subcategory Chips -->
-    <div class="category-chips mt-3 mb-2" id="subcategoryChips">
-        <a href="category.html?cat=berita-sekolah" class="category-chip active">Semua</a>
-        <a href="category.html?cat=berita-sekolah&amp;sub=kegiatan-siswa" class="category-chip ">Kegiatan Siswa</a><a href="category.html?cat=berita-sekolah&amp;sub=kegiatan-guru" class="category-chip ">Kegiatan Guru</a><a href="category.html?cat=berita-sekolah&amp;sub=fasilitas" class="category-chip ">Fasilitas</a>
-    </div>
+    @if (Model.CurrentCategory != null)
+    {
+        <!-- Subcategory Chips -->
+        <div class="category-chips mt-3 mb-2" id="subcategoryChips">
+            @if (Model.CurrentSubCategory == null)
+            {
+                <a href="/Kategori/@Model.CurrentCategory.Slug" class="category-chip active">Semua</a>
+            }
+            else
+            {
+                <a href="/Kategori/@Model.CurrentCategory.Slug" class="category-chip">Semua</a>
+            }
+
+            @foreach (var subcat in Model.CurrentCategory.SubCategories)
+            {
+                @if (Model.CurrentSubCategory != null)
+                {
+                    if (subcat.Slug == Model.CurrentSubCategory.Slug)
+                    {
+                        <a href="/Kategori/@Model.CurrentCategory.Slug/@subcat.Slug" class="category-chip active">@subcat.Name</a>
+                    }
+                    else
+                    {
+                        <a href="/Kategori/@Model.CurrentCategory.Slug/@subcat.Slug" class="category-chip ">@subcat.Name</a>
+                    }
+                }
+                else
+                {
+                    <a href="/Kategori/@Model.CurrentCategory.Slug/@subcat.Slug" class="category-chip ">@subcat.Name</a>
+                }
+            }
+        </div>
+    }
 
     <div class="row">
         <div class="col-lg-8">
             <div class="row" id="categoryGrid">
-                <div class="col-md-6 col-lg-4 mb-4 fade-in">
-                    <div class="news-card">
-                        <div class="card-img-wrapper">
-                            <img src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=800&amp;h=500&amp;fit=crop" alt="Workshop Industri 4.0: Mempersiapkan Lulusan Siap Kerja" loading="lazy">
-                            <span class="category-badge">Berita Sekolah</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title"><a href="article.html?id=3">Workshop Industri 4.0: Mempersiapkan Lulusan Siap Kerja</a></h5>
-                            <p class="card-excerpt">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore...</p>
-                            <div class="card-meta">
-                                <span><i class="bi bi-person me-1"></i>Budi Santoso</span>
-                                <span><i class="bi bi-clock me-1"></i>13 April 2026</span>
-                                <span><i class="bi bi-eye me-1"></i>342</span>
+                @foreach (var article in Model.Articles)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4 fade-in">
+                        <div class="news-card">
+                            <div class="card-img-wrapper">
+                                <img src="@article.ThumbnailUrl" alt="@article.Title" loading="lazy">
+                                <span class="category-badge">@article.Cat.Name</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title"><a href="/Article/@article.Slug">@article.Title</a></h5>
+                                <p class="card-excerpt">@article.Excerpt...</p>
+                                <div class="card-meta">
+                                    <span><i class="bi bi-person me-1"></i>@article.Author.FullName</span>
+                                    <span><i class="bi bi-clock me-1"></i>@(article.PublishedAt == null ? article.UpdatedAt.ToString("dd MMMM yyyy") : article.PublishedAt?.ToString("dd MMMM yyyy"))</span>
+                                    <span><i class="bi bi-eye me-1"></i>@article.Views</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-4 mb-4 fade-in">
-                    <div class="news-card">
-                        <div class="card-img-wrapper">
-                            <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&amp;h=500&amp;fit=crop" alt="Kunjungan Industri ke PT Astra Honda Motor" loading="lazy">
-                            <span class="category-badge">Berita Sekolah</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title"><a href="article.html?id=5">Kunjungan Industri ke PT Astra Honda Motor</a></h5>
-                            <p class="card-excerpt">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore...</p>
-                            <div class="card-meta">
-                                <span><i class="bi bi-person me-1"></i>Budi Santoso</span>
-                                <span><i class="bi bi-clock me-1"></i>11 April 2026</span>
-                                <span><i class="bi bi-eye me-1"></i>290</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 mb-4 fade-in">
-                    <div class="news-card">
-                        <div class="card-img-wrapper">
-                            <img src="https://images.unsplash.com/photo-1562774053-701939374585?w=800&amp;h=500&amp;fit=crop" alt="Peringatan Hari Pendidikan Nasional di SMKN 1 Dlanggu" loading="lazy">
-                            <span class="category-badge">Berita Sekolah</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title"><a href="article.html?id=8">Peringatan Hari Pendidikan Nasional di SMKN 1 Dlanggu</a></h5>
-                            <p class="card-excerpt">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore...</p>
-                            <div class="card-meta">
-                                <span><i class="bi bi-person me-1"></i>Siti Rahayu</span>
-                                <span><i class="bi bi-clock me-1"></i>8 April 2026</span>
-                                <span><i class="bi bi-eye me-1"></i>249</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 col-lg-4 mb-4 fade-in">
-                    <div class="news-card">
-                        <div class="card-img-wrapper">
-                            <img src="https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&amp;h=500&amp;fit=crop" alt="Kolaborasi dengan Telkom untuk Program Magang Siswa" loading="lazy">
-                            <span class="category-badge">Berita Sekolah</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title"><a href="article.html?id=12">Kolaborasi dengan Telkom untuk Program Magang Siswa</a></h5>
-                            <p class="card-excerpt">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore...</p>
-                            <div class="card-meta">
-                                <span><i class="bi bi-person me-1"></i>Siti Rahayu</span>
-                                <span><i class="bi bi-clock me-1"></i>4 April 2026</span>
-                                <span><i class="bi bi-eye me-1"></i>430</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                }
             </div>
             <div id="categoryPagination"></div>
         </div>
@@ -95,47 +77,15 @@
             <div class="sidebar-widget">
                 <h5 class="widget-title"><i class="bi bi-tags-fill me-2"></i>Semua Kategori</h5>
                 <div id="allCategories">
-                    <div class="sidebar-item">
-                        <div class="item-content" style="flex:1">
-                            <h6><a href="category.html?cat=berita-sekolah">Berita Sekolah</a></h6>
-                            <span class="item-meta">4 berita</span>
+                    @foreach (var cat in Model.Categories)
+                    {
+                        <div class="sidebar-item">
+                            <div class="item-content" style="flex:1">
+                                <h6><a href="/Kategori/@cat.Slug">@cat.Name</a></h6>
+                                <span class="item-meta">@cat.Articles.Count() berita</span>
+                            </div>
                         </div>
-                    </div>
-    
-                    <div class="sidebar-item">
-                        <div class="item-content" style="flex:1">
-                            <h6><a href="category.html?cat=prestasi">Prestasi</a></h6>
-                            <span class="item-meta">3 berita</span>
-                        </div>
-                    </div>
-    
-                    <div class="sidebar-item">
-                        <div class="item-content" style="flex:1">
-                            <h6><a href="category.html?cat=pengumuman">Pengumuman</a></h6>
-                            <span class="item-meta">3 berita</span>
-                        </div>
-                    </div>
-    
-                    <div class="sidebar-item">
-                        <div class="item-content" style="flex:1">
-                            <h6><a href="category.html?cat=ekstrakurikuler">Ekstrakurikuler</a></h6>
-                            <span class="item-meta">3 berita</span>
-                        </div>
-                    </div>
-    
-                    <div class="sidebar-item">
-                        <div class="item-content" style="flex:1">
-                            <h6><a href="category.html?cat=agenda">Agenda</a></h6>
-                            <span class="item-meta">0 berita</span>
-                        </div>
-                    </div>
-    
-                    <div class="sidebar-item">
-                        <div class="item-content" style="flex:1">
-                            <h6><a href="category.html?cat=asdsa">asdsa</a></h6>
-                            <span class="item-meta">0 berita</span>
-                        </div>
-                    </div>
+                    }
                 </div>
             </div>
         </div>

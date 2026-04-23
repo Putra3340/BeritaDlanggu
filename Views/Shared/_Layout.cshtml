@@ -25,8 +25,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Portal Berita Resmi SMKN 1 Dlanggu - Informasi terkini seputar kegiatan sekolah, prestasi siswa, pengumuman, dan agenda penting.">
-    <title>@ViewData[ServerSettingsKey.WebsiteName] - @ViewData[ServerSettingsKey.TagLine]</title>
+
+    <!-- SEO META -->
+    <title>@ViewData["MetaTitle"]</title>
+    <meta name="description" content="@ViewData["MetaDesc"]">
+    <meta name="keywords" content="@ViewData["MetaKeyword"]">
+    <meta name="author" content="@ViewData["MetaAuthor"]">
+    <meta name="robots" content="@ViewData["MetaRobot"]">
+    <!-- Open Graph (Facebook, Discord, etc.) -->
+    <meta property="og:title" content="@ViewData["MetaTitle"]">
+    <meta property="og:description" content="@ViewData["MetaDesc"]">
+    <meta property="og:image" content="@ViewData["MetaImage"]">
+    <meta property="og:url" content="@ViewData["MetaUrl"]">
+    <meta property="og:type" content="@ViewData["MetaType"]">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@ViewData["MetaTitle"]">
+    <meta name="twitter:description" content="@ViewData["MetaDesc"]">
+    <meta name="twitter:image" content="@ViewData["MetaImage"]">
+
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="~/css/site.css" rel="stylesheet">
@@ -72,7 +89,7 @@
                 <div class="navbar-collapse collapse" id="mainNav" style="">
                     <ul class="navbar-nav ms-auto me-3">
 
-                        <li class="nav-item"><a class="nav-link " href="/"><i class="bi bi-house me-1"></i>Beranda</a></li>
+                        <li class="nav-item"><a class="nav-link " href="/">Beranda</a></li>
                         @if (ViewData["CatList"] as List<Categories> != null)
                         {
                             @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
@@ -80,20 +97,20 @@
                                 <li class="nav-item dropdown">
                                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">@cat.Name</a>
                                     <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="/Category/@cat.Slug"><strong>Semua @cat.Name</strong></a></li>
+                                        <li><a class="dropdown-item" href="/Kategori/@cat.Slug"><strong>Semua @cat.Name</strong></a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         @foreach (var sub in cat.SubCategories)
                                         {
-                                            <li><a class="dropdown-item" href="/Category/@cat.Slug/@sub.Slug">@sub.Name</a></li>
+                                            <li><a class="dropdown-item" href="/Kategori/@cat.Slug/@sub.Slug">@sub.Name</a></li>
                                         }
                                     </ul>
                                 </li>
                             }
                         }
                     </ul>
-                    <form class="navbar-search d-none d-lg-block" action="search.html" method="GET">
+                    <form class="navbar-search d-none d-lg-block" action="/Search" method="GET">
                         <i class="bi bi-search search-icon"></i>
-                        <input type="text" name="q" placeholder="Cari berita..." autocomplete="off">
+                        <input type="text" name="query" placeholder="Cari berita..." autocomplete="off">
                     </form>
                 </div>
             </div>
@@ -125,7 +142,7 @@
                         {
                             @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
                             {
-                                <li><a href="/Category/@cat.Slug">@cat.Name</a></li>
+                                <li><a href="/Kategori/@cat.Slug">@cat.Name</a></li>
                             }
                         }
                     </ul>

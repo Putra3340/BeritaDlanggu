@@ -18,7 +18,6 @@ namespace BeritaDlanggu.Controllers
         }
         public IActionResult Index()
         {
-            var scheme = $"{Request.Scheme}://{Request.Host}";
 
 
             // Need this every Page
@@ -34,6 +33,7 @@ namespace BeritaDlanggu.Controllers
             ViewData[ServerSettingsKey.ArticlePerPage] = articlesPerPage?.Value ?? "9";
             ViewData["CatList"] = _context.Categories.Include(c => c.SubCategories).AsNoTracking().ToList();
 
+
             var featured = _context.Articles
     .Where(a => a.IsFeatured && a.Status == (int)ArticleStatus.Published)
     .OrderByDescending(a => a.PublishedAt)
@@ -42,7 +42,7 @@ namespace BeritaDlanggu.Controllers
     {
         Id = a.Id,
         Title = a.Title,
-        Banner = scheme + a.ThumbnailUrl,
+        Banner = a.ThumbnailUrl,
         CategoryName = a.Cat.Name,
         Slug = a.Slug,
         Content = a.Excerpt,
@@ -106,6 +106,17 @@ namespace BeritaDlanggu.Controllers
                 TrendingArticles = trending,
                 AnnouncementArticles = announcements
             };
+
+            var scheme = $"{Request.Scheme}://{Request.Host}";
+
+            ViewData["MetaTitle"] = siteNameSetting?.Value ?? "" + " - " + tagline?.Value ?? ""; ;
+            ViewData["MetaDesc"] = tagline?.Value ?? ""; ;
+            ViewData["MetaKeyword"] = siteNameSetting?.Value ?? "" + "," + tagline?.Value ?? ""; ;
+            ViewData["MetaAuthor"] = "Putra3340" ;
+            ViewData["MetaRobot"] = "index, follow" ;
+            ViewData["MetaImage"] = scheme + "/icon-dlanggu.png";
+            ViewData["MetaUrl"] = scheme;
+            ViewData["MetaType"] = "website";
 
             return View(model);
         }
