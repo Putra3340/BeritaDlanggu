@@ -352,6 +352,7 @@
         {
             var cat = Db.SubCategories.First(x => x.Id == catSubEditId);
             cat.Name = catSubName;
+            cat.Slug = catSubName.GenerateSlug();
             // Activity Log
             var activity = new ActivityLogs
             {

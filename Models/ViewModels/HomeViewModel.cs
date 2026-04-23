@@ -12,6 +12,7 @@
     {
         public int Id { get; set; }
         public string Title { get; set; } = null!;
+        public string Slug { get; set; } = null!;
         public string Content { get; set; } = null!;
         public string AuthorName { get; set; } = null!;
         public string CategoryName { get; set; } = null!;
@@ -19,5 +20,4 @@
         public int ViewsCount { get; set; }
         public DateTime CreatedAt { get; set; }
     }
-
 }

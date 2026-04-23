@@ -54,7 +54,7 @@
                             <i class="bi bi-person me-1"></i>@item.AuthorName •
                             <i class="bi bi-clock ms-2 me-1"></i>@item.CreatedAt.ToString("d MMMM yyyy")
                         </div>
-                        <a href="Article?id=@item.Id" class="btn btn-primary btn-sm mt-3">
+                        <a href="/Article/@item.Slug" class="btn btn-primary btn-sm mt-3">
                             Baca Selengkapnya <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
@@ -80,12 +80,26 @@
                 <a href="category.html" class="view-all">Lihat Semua <i class="bi bi-arrow-right"></i></a>
             </div>
             <div class="row" id="newsGrid">
-                
-            </div>
-            <div class="pagination">
-                <button onclick="loadPage(1)">1</button>
-                <button onclick="loadPage(2)">2</button>
-                <button onclick="loadPage(3)">3</button>
+                @foreach (var article in Model.LatestArticles)
+                {
+                    <div class="col-md-6 col-lg-4 mb-4 fade-in">
+                        <div class="news-card">
+                            <div class="card-img-wrapper">
+                                <img src="@article.Banner" alt="@article.Title" loading="lazy">
+                                <span class="category-badge">@article.CategoryName</span>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title"><a href="/Article/@article.Slug">@article.Title</a></h5>
+                                <p class="card-excerpt">@article.Content...</p>
+                                <div class="card-meta">
+                                    <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
+                                    <span><i class="bi bi-clock me-1"></i>@article.CreatedAt.ToString("dd MMMM yyyy")</span>
+                                    <span><i class="bi bi-eye me-1"></i>@article.ViewsCount</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
 
@@ -104,7 +118,7 @@
                         <div class="sidebar-item">
                             <span class="item-number">@trendingtop</span>
                             <div class="item-content">
-                                <h6><a href="article.html?id=@item.Id">@item.Title</a></h6>
+                                <h6><a href="/Article/@item.Slug">@item.Title</a></h6>
                                 <span class="item-meta"><i class="bi bi-eye me-1"></i>@item.ViewsCount.ToString() views • @item.CreatedAt.ToString("d MMMM yyyy")</span>
                             </div>
                         </div>
@@ -121,7 +135,7 @@
                         
                         <div class="announcement-item">
                             <span class="ann-badge">Pengumuman</span>
-                            <h6><a href="article.html?id=@item.Id">@item.Title</a></h6>
+                            <h6><a href="/Article/@item.Slug">@item.Title</a></h6>
                             <p><i class="bi bi-clock me-1"></i>@item.CreatedAt.ToString("d MMMM yyyy")</p>
                         </div>
                     }
@@ -131,48 +145,20 @@
             <!-- Kategori -->
             <div class="sidebar-widget slide-up">
                 <h5 class="widget-title"><i class="bi bi-tags-fill me-2"></i>Kategori</h5>
-                <div id="categoryList" class="category-chips"><a href="category.html?cat=berita-sekolah" class="category-chip">Berita Sekolah <span class="ms-1 opacity-50">(4)</span></a><a href="category.html?cat=prestasi" class="category-chip">Prestasi <span class="ms-1 opacity-50">(3)</span></a><a href="category.html?cat=pengumuman" class="category-chip">Pengumuman <span class="ms-1 opacity-50">(3)</span></a><a href="category.html?cat=ekstrakurikuler" class="category-chip">Ekstrakurikuler <span class="ms-1 opacity-50">(3)</span></a><a href="category.html?cat=agenda" class="category-chip">Agenda <span class="ms-1 opacity-50">(0)</span></a></div>
+                <div class="category-chips">
+                    @if (ViewData["CatList"] as List<Categories> != null)
+                    {
+                        @foreach (var cat in ViewData["CatList"] as List<Categories>)
+                        {
+                            <a href="/Category/@cat.Slug" class="category-chip">
+                                @cat.Name
+                                <span class="ms-1 opacity-50">(@cat.SubCategories.Count())</span>
+                            </a>
+                        
+                        }
+                    }
+                </div>
             </div>
         </div>
     </div>
 </section>
-<script id="b3v9t9">
-    async function loadPage(page) {
-        const grid = document.getElementById("newsGrid");
-
-        // fade out
-        grid.classList.add("fade-out");
-
-        setTimeout(async () => {
-            const res = await fetch(`/Home/GetArticles?page=${page}`);
-            const data = await res.json();
-
-            let html = "";
-
-            data.forEach(item => {
-                html += `
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="news-card">
-                        <div class="card-img-wrapper">
-                            <img src="${item.banner}" loading="lazy">
-                            <span class="category-badge">${item.categoryName}</span>
-                        </div>
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <a href="article.html?id=${item.id}">${item.title}</a>
-                            </h5>
-                            <p>${item.content}</p>
-                        </div>
-                    </div>
-                </div>`;
-            });
-
-            grid.innerHTML = html;
-
-            // fade in
-            grid.classList.remove("fade-out");
-            grid.classList.add("fade-in");
-
-        }, 300);
-    }
-</script>

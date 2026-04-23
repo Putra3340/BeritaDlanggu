@@ -19,6 +19,7 @@ builder.Services.AddServerSideBlazor()
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
     {
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
         options.LoginPath = "/Auth";
         options.AccessDeniedPath = "/";
     });
@@ -30,6 +31,14 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(24);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
@@ -48,6 +57,7 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseSession();
 app.MapStaticAssets();
 
 // MVC routes (for "/")

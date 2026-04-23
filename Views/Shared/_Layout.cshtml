@@ -1,10 +1,32 @@
-﻿<!DOCTYPE html>
+﻿@{
+    string PrimaryColor = ViewData[ServerSettingsKey.ThemeColor] as string;
+    string AccentColor = ViewData[ServerSettingsKey.ThemeAccentColor] as string;
+    string Adjust(string hex, int percent)
+    {
+        hex = hex.Replace("#", "");
+        int r = Convert.ToInt32(hex.Substring(0, 2), 16);
+        int g = Convert.ToInt32(hex.Substring(2, 2), 16);
+        int b = Convert.ToInt32(hex.Substring(4, 2), 16);
+
+        int AdjustChannel(int c)
+        {
+            return Math.Clamp(c + (int)(percent / 100.0 * 255), 0, 255);
+        }
+
+        r = AdjustChannel(r);
+        g = AdjustChannel(g);
+        b = AdjustChannel(b);
+
+        return $"#{r:X2}{g:X2}{b:X2}";
+    }
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Portal Berita Resmi SMKN 1 Dlanggu - Informasi terkini seputar kegiatan sekolah, prestasi siswa, pengumuman, dan agenda penting.">
-    <title>Berita SMKN 1 Dlanggu - Portal Berita Sekolah</title>
+    <title>@ViewData[ServerSettingsKey.WebsiteName] - @ViewData[ServerSettingsKey.TagLine]</title>
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="~/lib/bootstrap-icons/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="~/css/site.css" rel="stylesheet">
@@ -20,18 +42,28 @@
                     </div>
                     <div class="d-none d-md-flex align-items-center gap-3">
                         <span><i class="bi bi-calendar3 me-1"></i>16 April 2026</span>
-                        <a href="/Auth"><i class="bi bi-person me-1"></i>Login</a>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Editor"))
+                        {
+                            <a href="/Admin" class="btn btn-sm dashboard-btn">
+                                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Auth"><i class="bi bi-person me-1"></i>Login</a>
+                        }
                     </div>
                 </div>
             </div>
         </div>
         <nav class="navbar navbar-expand-lg main-navbar">
             <div class="container">
-                <a class="navbar-brand" href="index.html">
-                    <div style="width:42px;height:42px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;">S1</div>
+                <a class="navbar-brand" href="/">
+                    <img src="~/icon-dlanggu.png"
+                         style="width:42px;height:42px;object-fit:contain;border-radius:10px;" />
                     <div>
-                        <div style="line-height:1.2">Berita SMKN 1 Dlanggu</div>
-                        <small style="font-size:10px;color:var(--text-muted);font-weight:400">Portal Berita Sekolah</small>
+                        <div style="line-height:0.3;margin-top:10%">@ViewData[ServerSettingsKey.WebsiteName]</div>
+                        <small style="font-size:10px;color:var(--text-muted);font-weight:400">@ViewData[ServerSettingsKey.TagLine]</small>
                     </div>
                 </a>
                 <button class="navbar-toggler border-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-expanded="false">
@@ -39,50 +71,25 @@
                 </button>
                 <div class="navbar-collapse collapse" id="mainNav" style="">
                     <ul class="navbar-nav ms-auto me-3">
-                        <li class="nav-item"><a class="nav-link " href="index.html"><i class="bi bi-house me-1"></i>Beranda</a></li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Berita Sekolah</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah"><strong>Semua Berita Sekolah</strong></a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah&amp;sub=kegiatan-siswa">Kegiatan Siswa</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah&amp;sub=kegiatan-guru">Kegiatan Guru</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=berita-sekolah&amp;sub=fasilitas">Fasilitas</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Prestasi</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="category.html?cat=prestasi"><strong>Semua Prestasi</strong></a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="category.html?cat=prestasi&amp;sub=akademik">Akademik</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=prestasi&amp;sub=non-akademik">Non-Akademik</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=prestasi&amp;sub=lomba">Lomba</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Pengumuman</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="category.html?cat=pengumuman"><strong>Semua Pengumuman</strong></a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="category.html?cat=pengumuman&amp;sub=ppdb">PPDB</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=pengumuman&amp;sub=ujian">Ujian</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=pengumuman&amp;sub=libur">Libur</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Ekstrakurikuler</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler"><strong>Semua Ekstrakurikuler</strong></a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler&amp;sub=olahraga">Olahraga</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler&amp;sub=seni">Seni</a></li>
-                                <li><a class="dropdown-item" href="category.html?cat=ekstrakurikuler&amp;sub=teknologi">Teknologi</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="category.html?cat=agenda">Agenda</a>
-                        </li>
+
+                        <li class="nav-item"><a class="nav-link " href="/"><i class="bi bi-house me-1"></i>Beranda</a></li>
+                        @if (ViewData["CatList"] as List<Categories> != null)
+                        {
+                            @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">@cat.Name</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="/Category/@cat.Slug"><strong>Semua @cat.Name</strong></a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        @foreach (var sub in cat.SubCategories)
+                                        {
+                                            <li><a class="dropdown-item" href="/Category/@cat.Slug/@sub.Slug">@sub.Name</a></li>
+                                        }
+                                    </ul>
+                                </li>
+                            }
+                        }
                     </ul>
                     <form class="navbar-search d-none d-lg-block" action="search.html" method="GET">
                         <i class="bi bi-search search-icon"></i>
@@ -102,7 +109,7 @@
         <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4 footer-about">
-                    <h5><i class="bi bi-mortarboard-fill me-2"></i>${settings.siteName || 'Berita SMKN 1 Dlanggu'}</h5>
+                    <h5><i class="bi bi-mortarboard-fill me-2"></i>@ViewData[ServerSettingsKey.WebsiteName]</h5>
                     <p>Portal berita resmi SMKN 1 Dlanggu yang menyajikan informasi terkini seputar kegiatan sekolah, prestasi siswa, pengumuman, dan berbagai agenda penting.</p>
                     <div class="footer-social mt-3">
                         <a href="#" title="Facebook"><i class="bi bi-facebook"></i></a>
@@ -114,17 +121,13 @@
                 <div class="col-lg-2 col-md-4">
                     <h5>Kategori</h5>
                     <ul class="list-unstyled footer-links">
-                        ${categories.map(cat => `
-                        <li><a href="${basePath}category.html?cat=${cat.slug}">${cat.name}</a></li>`).join('')}
-                    </ul>
-                </div>
-                <div class="col-lg-3 col-md-4">
-                    <h5>Tautan</h5>
-                    <ul class="list-unstyled footer-links">
-                        <li><a href="${basePath}index.html">Beranda</a></li>
-                        <li><a href="#">Tentang Sekolah</a></li>
-                        <li><a href="#">Kontak</a></li>
-                        <li><a href="${basePath}login.html">Login Portal</a></li>
+                        @if (ViewData["CatList"] as List<Categories> != null)
+                        {
+                            @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
+                            {
+                                <li><a href="/Category/@cat.Slug">@cat.Name</a></li>
+                            }
+                        }
                     </ul>
                 </div>
                 <div class="col-lg-3 col-md-4">
@@ -138,14 +141,38 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <div class="container text-center">
-                &copy; ${new Date().getFullYear()} ${settings.siteName || 'SMKN 1 Dlanggu'}. All rights reserved.
+            <div class="container position-relative">
+        
+                <!-- perfectly centered -->
+                <div class="text-center">
+                    &copy; @DateTime.Now.ToString("yyyy")
+                    @ViewData[ServerSettingsKey.WebsiteName]. All rights reserved.
+                </div>
+
+                <!-- right side -->
+                <div class="position-absolute top-50 end-0 translate-middle-y">
+                    Powered By
+                    <a href="https://www.linkedin.com/in/rahmad-syaputra/">Putra3340</a>
+                </div>
+
             </div>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+            document.documentElement.style.setProperty('--primary', '@PrimaryColor');
+            document.documentElement.style.setProperty('--primary-light', '@Adjust(PrimaryColor, 20)');
+            document.documentElement.style.setProperty('--primary-lighter', '@Adjust(PrimaryColor, 40)');
+            document.documentElement.style.setProperty('--primary-lightest', '@Adjust(PrimaryColor, 70)');
+            document.documentElement.style.setProperty('--primary-dark', '@Adjust(PrimaryColor, -15)');
+            document.documentElement.style.setProperty('--primary-darker', '@Adjust(PrimaryColor, -30)');
+
+            document.documentElement.style.setProperty('--accent', '@AccentColor');
+            document.documentElement.style.setProperty('--accent-light', '@Adjust(AccentColor, 25)');
+            document.documentElement.style.setProperty('--accent-dark', '@Adjust(AccentColor, 25)');
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

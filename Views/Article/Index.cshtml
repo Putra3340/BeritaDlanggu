@@ -1,0 +1,105 @@
+﻿@model Articles
+@{
+    var title = Uri.EscapeDataString(Model.Title);
+    var url = Uri.EscapeDataString($"{Context.Request.Scheme}://{Context.Request.Host}{Context.Request.Path}{Context.Request.QueryString}");
+
+    var waUrl = "https://wa.me/?text=" + title + "%20" + url;
+    var fbUrl = "https://www.facebook.com/sharer/sharer.php?u=" + url;
+    var twUrl = "https://twitter.com/intent/tweet?text=" + title + "&url=" + url;
+}
+
+<section class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb" id="articleBreadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Beranda</a></li>
+                    <li class="breadcrumb-item"><a href="/Category/@Model.Cat.Slug">@Model.Cat.Name</a></li>
+                    <li class="breadcrumb-item active">Kunjungan Industri ke PT Astra Honda Mot...</li>
+                </ol>
+            </nav>
+
+            <!-- Article -->
+            <article class="article-page fade-in">
+                <div class="article-header">
+                    <a href="/Category/@Model.Cat.Slug" class="article-category">@Model.Cat.Name</a>
+                    <h1>@Model.Title</h1>
+                    <div class="article-meta">
+                        <div class="author-info">
+                            <div class="author-avatar">@Model.Author.FullName[0]</div>
+                            <div>
+                                <strong id="authorName">@Model.Author.FullName</strong>
+                                <div class="text-muted small">@Model.Author.Role</div>
+                            </div>
+                        </div>
+                        <span><i class="bi bi-calendar3 me-1"></i><span>@(Model.PublishedAt == null ? Model.UpdatedAt.ToString("dd MMMM yyyy") : Model.PublishedAt?.ToString("dd MMMM yyyy"))</span></span>
+                        <span><i class="bi bi-eye me-1"></i><span id="articleViews">@Model.Views</span> views</span>
+                    </div>
+                </div>
+
+                <div class="article-featured-img">
+                    <img src="@Model.ThumbnailUrl" alt="@Model.Title">
+                </div>
+
+                <div class="article-content" id="articleContent">
+                    @Html.Raw(Model.Content)
+                </div>
+
+                <div class="share-buttons">
+                    <span class="share-label">Bagikan:</span>
+
+                    <a href="@waUrl" class="share-btn whatsapp" target="_blank">
+                        <i class="bi bi-whatsapp"></i> WhatsApp
+                    </a>
+
+                    <a href="@fbUrl" class="share-btn facebook" target="_blank">
+                        <i class="bi bi-facebook"></i> Facebook
+                    </a>
+
+                    <a href="@twUrl" class="share-btn twitter" target="_blank">
+                        <i class="bi bi-twitter-x"></i> Twitter
+                    </a>
+                </div>
+
+                <!-- Related Posts -->
+                <div class="mt-5">
+                    <div class="section-header">
+                        <h2><i class="bi bi-collection me-2"></i>Berita Terkait</h2>
+                    </div>
+                    <div class="row" id="relatedPosts">
+                        @if(ViewBag.Related as List<Articles> != null)
+                        {
+                            @foreach(var article in (ViewBag.Related as List<Articles>))
+                            {
+                                <div class="col-md-6 col-lg-4 mb-4 fade-in">
+                                    <div class="news-card">
+                                        <div class="card-img-wrapper">
+                                            <img src="@article.ThumbnailUrl" alt="@article.Title" loading="lazy">
+                                            <span class="category-badge">@article.Cat.Name</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <h5 class="card-title"><a href="/Article">@article.Title</a></h5>
+                                            <p class="card-excerpt">@article.Excerpt...</p>
+                                            <div class="card-meta">
+                                                <span><i class="bi bi-person me-1"></i>@article.Author.FullName</span>
+                                                <span><i class="bi bi-clock me-1"></i>@(article.PublishedAt == null ? article.UpdatedAt.ToString("dd MMMM yyyy") : article.PublishedAt?.ToString("dd MMMM yyyy"))</span>
+                                                <span><i class="bi bi-eye me-1"></i>@article.Views</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</section>
+<script>
+    function copyArticleLink() {
+        navigator.clipboard.writeText(window.location.href)
+            .then(() => alert('Link disalin!'));
+    }
+</script>
