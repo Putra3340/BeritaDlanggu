@@ -18,8 +18,6 @@ namespace BeritaDlanggu.Controllers
         }
         public IActionResult Index()
         {
-
-
             // Need this every Page
             var siteNameSetting = _context.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.WebsiteName);
             var tagline = _context.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.TagLine);

@@ -1,0 +1,291 @@
+﻿@page "/Admin/InstaArticle"
+@layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject BeritaDlangguNetContext Db
+@inject IJSRuntime JS
+@inject IWebHostEnvironment Env
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NotificationService Notif
+@inject NavigationManager Nav
+@inject IHttpContextAccessor HttpContextAccessor
+@inject InstagramService Ws
+
+<div class="dashboard-topbar">
+    <div>
+        <h4>Impor Dari Instagram</h4>
+        <p class="text-muted mb-0 small">Buat konten menarik untuk pembaca</p>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <!-- Publish Settings -->
+        <div class="settings-card">
+            <h5><i class="bi bi-gear me-2"></i>Kontrol</h5>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Ambil Postingan Sebanyak. Max 20</label>
+                <input type="number" class="form-control" id="numberInput" placeholder="e.g. 10" @bind-value="posttakecount">
+            </div>
+            <button class="btn btn-primary mb-3" @onclick="TakePost"><i class="bi bi-check-circle me-2"></i>Ambil Postingan</button>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Judul</label>
+                <input type="text" class="form-control form-control-lg" id="articleTitle" placeholder="Masukkan judul artikel yang menarik..." required @bind-value="article.Title">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Konten (Read Only)</label>
+                
+                <textarea class="form-control form-control-lg"
+                          rows="5"
+                          readonly
+                              @bind="article.Content">
+    </textarea>
+            </div>
+        </div>
+
+        <!-- Image -->
+        <div class="settings-card">
+            <h5><i class="bi bi-image me-2"></i>Gambar Utama</h5>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Upload Gambar</label>
+                <InputFile class="form-control"
+                           accept="image/*"
+                           OnChange="OnImageSelected" />
+
+                <div class="form-text">
+                    Hanya file gambar dari perangkat
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(imagePreviewUrl))
+            {
+                <div class="mt-2">
+                    <img src="@imagePreviewUrl"
+                         class="rounded"
+                         style="width:100%;height:160px;object-fit:cover" />
+                </div>
+            }
+        </div>
+        <!-- Actions -->
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" @onclick="() => SaveDraft()"><i class="bi bi-check-circle me-2"></i>Simpan Artikel Sebagai Draf</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Admin/Article'"><i class="bi bi-x-circle me-2"></i>Batal</button>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        @foreach(var post in postItem.Items)
+        {
+        <!-- Item -->
+            <div class="d-flex align-items-center justify-content-between mb-4 p-3 border rounded">
+
+                <div class="d-flex align-items-center">
+                    <img src="@post.ImageUrl"
+                         class="img-fluid rounded"
+                         style="width: 120px; height: 120px; object-fit: cover;" />
+
+                    <div class="ms-3">
+                        <h5 class="mb-1">
+                                @(article.Title = string.IsNullOrEmpty(post.Caption)
+        ? post.Caption
+        : (post.Caption.Contains('.')
+            ? post.Caption.Substring(0, post.Caption.IndexOf('.') + 1)
+            : (post.Caption.Length > 50 ? post.Caption.Substring(0, 50) : post.Caption)))
+                        </h5>
+                        <p class="mb-0 text-muted">
+                            @(post.Caption.Length >= 200 ? post.Caption.Substring(0, 200) : post.Caption)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Import Button -->
+                <button class="btn btn-primary d-flex align-items-center" @onclick="() => ImportPost(post.Id)">
+                    <i class="bi bi-arrow-90deg-left me-1"></i> Impor
+                </button>
+
+            </div>
+        }
+    </div>
+
+    
+</div>
+@code{
+    // WS THING
+    private int posttakecount = 10;
+
+    // Form
+    private Articles article = new();
+    private ReceiveModel postItem = new();
+
+    private string imagePreviewUrl;
+    private IBrowserFile selectedImage;
+    private ClaimsPrincipal user;
+    public async Task<string> ImageUrlToBase64Async(string url)
+    {
+        using var http = new HttpClient();
+        var bytes = await http.GetByteArrayAsync(url);
+        return Convert.ToBase64String(bytes);
+    }
+    private async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        selectedImage = e.File;
+
+        using var stream = selectedImage.OpenReadStream(5 * 1024 * 1024);
+        using var ms = new MemoryStream();
+
+        await stream.CopyToAsync(ms);
+        var buffer = ms.ToArray();
+
+        imagePreviewUrl = $"data:{selectedImage.ContentType};base64,{Convert.ToBase64String(buffer)}";
+    }
+    public static void Base64ToPng(string base64, string outputPath)
+    {
+        // If it includes "data:image/png;base64,..."
+        var commaIndex = base64.IndexOf(',');
+        if (commaIndex >= 0)
+            base64 = base64.Substring(commaIndex + 1);
+
+        byte[] bytes = Convert.FromBase64String(base64);
+        File.WriteAllBytes(outputPath, bytes);
+    }
+
+    private async Task TakePost()
+    {
+        var req = new SendModel
+        {
+            Id = Guid.NewGuid().ToString(),
+            Count = posttakecount,
+        };
+        await Ws.SendAsync(JsonSerializer.Serialize(req));
+    }
+    private async Task ImportPost(string id)
+    {
+        var post = postItem.Items.FirstOrDefault(x => x.Id == id);
+        if(post == null)
+        {
+            Notif.Show("Postingan tidak tersedia, coba refresh halaman");
+            return;
+        }
+        article.Title = string.IsNullOrEmpty(post.Caption)
+    ? post.Caption
+    : (post.Caption.Contains('.')
+        ? post.Caption.Substring(0, post.Caption.IndexOf('.') + 1)
+        : (post.Caption.Length > 50 ? post.Caption.Substring(0, 50) : post.Caption));
+        article.Content = $"<p>{post.Caption}<p>";
+        imagePreviewUrl = $"data:image/jpeg;base64,{await ImageUrlToBase64Async(post.ImageUrl)}";
+        await InvokeAsync(StateHasChanged);
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+
+        // Important
+        Ws.OnMessage += HandleMessage;
+        await Ws.ConnectAsync();
+    }
+    public async ValueTask DisposeAsync()
+    {
+        Ws.OnMessage -= HandleMessage;
+        await Ws.DisconnectAsync();
+    }
+    void HandleMessage(string msg)
+    {
+        ReceiveModel data = JsonSerializer.Deserialize<ReceiveModel>(msg);
+
+        postItem.Items.Clear();
+        postItem.Items.AddRange(data.Items);
+        InvokeAsync(StateHasChanged);
+    }
+    public async Task SaveDraft()
+    {
+        // title and slug
+        if (article.Title == null || article.Title.Length == 0)
+        {
+            Notif.Show("Judul artikel harus di isi!", "error");
+            return;
+        }
+
+        article.Slug = article.Title.GenerateSlug();
+        if (Db.Articles.Any(x => x.Slug == article.Slug || x.Title == article.Title))
+        {
+            Notif.Show("Judul Berita Sudah ada, silahkan gunakan judul lain!", "error");
+        }
+
+        if (imagePreviewUrl != null && imagePreviewUrl.Length > 0)
+        {
+            string base64 = imagePreviewUrl;
+            var fileName = $"{Guid.NewGuid()}.png";
+            var folderPath = Path.Combine(Env.WebRootPath, "uploads", "thumbnails");
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var filePath = Path.Combine(folderPath, fileName);
+
+            // If it includes "data:image/png;base64,..."
+            var commaIndex = base64.IndexOf(',');
+            if (commaIndex >= 0)
+                base64 = base64.Substring(commaIndex + 1);
+
+            byte[] bytes = Convert.FromBase64String(base64);
+            File.WriteAllBytes(filePath, bytes);
+
+            // save path to DB
+            article.ThumbnailUrl = $"/uploads/thumbnails/{fileName}";
+        }
+        else
+        {
+            Notif.Show("Gambar Utama wajib di ada!", "error");
+            return;
+        }
+
+
+
+        // excerpt
+        if (string.IsNullOrWhiteSpace(article.Excerpt))
+        {
+            article.Excerpt = article.Title != null && article.Title.Length > 100 ? article.Title.Substring(0, 100) + "..." : article.Title;
+        }
+
+        // meta
+        article.MetaTitle = article.Title;
+        article.MetaDescription = article.Excerpt;
+
+        article.AuthorId = int.Parse(user.FindFirst("Id")?.Value);
+        article.CreatedAt = DateTime.Now;
+
+        article.UpdatedAt = DateTime.Now;
+
+        article.Status = (int)ArticleStatus.Draft;
+
+        // search category and subcategory from database
+
+        var cat = Db.Categories.FirstOrDefault();
+        if (cat == null)
+        {
+            Notif.Show("Kategori tidak ada!", "error");
+            return;
+        }
+        article.Cat = cat;
+        var subcat = Db.SubCategories.FirstOrDefault(x => x.ParentId == cat.Id);
+        article.SubCat = subcat;
+
+        Db.Articles.Add(article);
+        Db.SaveChanges();
+
+        // Activity Log
+        var activity = new ActivityLogs
+        {
+            Action = "create",
+            Details = "Impor artikel: " + article.Title,
+            IpAddress = HttpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString(),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+
+        Notif.Show("Artikel berhasil disimpan!", "success");
+        Nav.NavigateTo($"/Admin/ArticleForm/{article.Id}");
+    }
+}
