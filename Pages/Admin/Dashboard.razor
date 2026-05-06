@@ -62,7 +62,7 @@
                         <img src="@item.ThumbnailUrl" alt="@item.Title">
                     </div>
                     <div class="item-content" style="flex:1">
-                        <h6><a href="../editor/article-form.html?id=1">@item.Title</a></h6>
+                        <h6><a href="/Article/@item.Slug">@item.Title</a></h6>
                         <span class="item-meta">
                             <span class="status-badge @(item.Status == (int)ArticleStatus.Draft ? "draft" : "published")" style="font-size:10px;padding:2px 8px">@(item.Status == (int)ArticleStatus.Draft ? "Draft" : "Published")</span>
                             • @ToRelativeTime(item.CreatedAt)

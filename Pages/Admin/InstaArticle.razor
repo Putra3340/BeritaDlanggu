@@ -8,7 +8,7 @@
 @inject NotificationService Notif
 @inject NavigationManager Nav
 @inject IHttpContextAccessor HttpContextAccessor
-@inject InstagramService Ws
+@implements IAsyncDisposable
 
 <div class="dashboard-topbar">
     <div>
@@ -22,13 +22,29 @@
         <div class="settings-card">
             <h5><i class="bi bi-gear me-2"></i>Kontrol</h5>
             <div class="mb-3">
-                <label class="form-label fw-semibold">Ambil Postingan Sebanyak. Max 20</label>
-                <input type="number" class="form-control" id="numberInput" placeholder="e.g. 10" @bind-value="posttakecount">
+                <label class="form-label fw-semibold">Username Instagram</label>
+                <input type="text" class="form-control" placeholder="e.g. smkndlanggu" @bind="igname">
+                <div class="form-text">https://www.instagram.com/@igname/</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Ambil Postingan Sebanyak..</label>
+                <input type="number" class="form-control" placeholder="e.g. 10" @bind-value="posttakecount">
             </div>
             <button class="btn btn-primary mb-3" @onclick="TakePost"><i class="bi bi-check-circle me-2"></i>Ambil Postingan</button>
+            <div class="card-meta d-flex flex-column align-items-start text-start">
+                <span>
+                    @Ws.WebSocket?.State.ToString() - @logtext
+                </span>
+            </div>
+        </div>
+
+                    
+        <!-- Image -->
+        <div class="settings-card">
+            
             <div class="mb-3">
                 <label class="form-label fw-semibold">Judul</label>
-                <input type="text" class="form-control form-control-lg" id="articleTitle" placeholder="Masukkan judul artikel yang menarik..." required @bind-value="article.Title">
+                <input type="text" class="form-control form-control-lg" placeholder="Masukkan judul artikel yang menarik..." required @bind="article.Title">
             </div>
             <div class="mb-3">
                 <label class="form-label fw-semibold">Konten (Read Only)</label>
@@ -37,83 +53,83 @@
                           rows="5"
                           readonly
                               @bind="article.Content">
-    </textarea>
+                    </textarea>
+                </div>
+
+                <h5><i class="bi bi-image me-2"></i>Gambar Utama</h5>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Upload Gambar</label>
+                    <InputFile class="form-control"
+                               accept="image/*"
+                               OnChange="OnImageSelected" />
+
+                    <div class="form-text">
+                        Hanya file gambar dari perangkat
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(imagePreviewUrl))
+                {
+                    <div class="mt-2">
+                        <img src="@imagePreviewUrl"
+                             class="rounded"
+                             style="width:100%;height:160px;object-fit:cover" />
+                    </div>
+                }
+            </div>
+            <!-- Actions -->
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" @onclick="() => SaveDraft()"><i class="bi bi-check-circle me-2"></i>Simpan Artikel Sebagai Draf</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Admin/Article'"><i class="bi bi-x-circle me-2"></i>Batal</button>
             </div>
         </div>
-
-        <!-- Image -->
-        <div class="settings-card">
-            <h5><i class="bi bi-image me-2"></i>Gambar Utama</h5>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Upload Gambar</label>
-                <InputFile class="form-control"
-                           accept="image/*"
-                           OnChange="OnImageSelected" />
-
-                <div class="form-text">
-                    Hanya file gambar dari perangkat
-                </div>
-            </div>
-
-            @if (!string.IsNullOrEmpty(imagePreviewUrl))
+        <div class="col-lg-8">
+            @foreach (var post in postItem)
             {
-                <div class="mt-2">
-                    <img src="@imagePreviewUrl"
-                         class="rounded"
-                         style="width:100%;height:160px;object-fit:cover" />
-                </div>
-            }
-        </div>
-        <!-- Actions -->
-        <div class="d-grid gap-2">
-            <button class="btn btn-primary" @onclick="() => SaveDraft()"><i class="bi bi-check-circle me-2"></i>Simpan Artikel Sebagai Draf</button>
-            <button type="button" class="btn btn-outline-secondary" onclick="window.location.href='/Admin/Article'"><i class="bi bi-x-circle me-2"></i>Batal</button>
-        </div>
-    </div>
-    <div class="col-lg-8">
-        @foreach(var post in postItem.Items)
-        {
-        <!-- Item -->
-            <div class="d-flex align-items-center justify-content-between mb-4 p-3 border rounded">
+                <!-- Item -->
+                <div class="d-flex align-items-center justify-content-between mb-4 p-3 border rounded">
 
-                <div class="d-flex align-items-center">
-                    <img src="@post.ImageUrl"
-                         class="img-fluid rounded"
-                         style="width: 120px; height: 120px; object-fit: cover;" />
+                    <div class="d-flex align-items-center">
+                        <img src="@post.ImageUrl"
+                             class="img-fluid rounded"
+                             style="width: 120px; height: 120px; object-fit: cover;" />
 
-                    <div class="ms-3">
-                        <h5 class="mb-1">
-                                @(article.Title = string.IsNullOrEmpty(post.Caption)
+                        <div class="ms-3">
+                            <h5 class="mb-1">
+                                @(string.IsNullOrEmpty(post.Caption)
         ? post.Caption
         : (post.Caption.Contains('.')
             ? post.Caption.Substring(0, post.Caption.IndexOf('.') + 1)
             : (post.Caption.Length > 50 ? post.Caption.Substring(0, 50) : post.Caption)))
-                        </h5>
-                        <p class="mb-0 text-muted">
-                            @(post.Caption.Length >= 200 ? post.Caption.Substring(0, 200) : post.Caption)
-                        </p>
+                            </h5>
+                            <p class="mb-0 text-muted">
+                                @(post.Caption.Length >= 200 ? post.Caption.Substring(0, 200) : post.Caption)
+                            </p>
+                        </div>
                     </div>
+
+                    <!-- Import Button -->
+                    <button class="btn btn-primary d-flex align-items-center" @onclick="() => ImportPost(post.Id)">
+                        <i class="bi bi-arrow-90deg-left me-1"></i> Impor
+                    </button>
+
                 </div>
-
-                <!-- Import Button -->
-                <button class="btn btn-primary d-flex align-items-center" @onclick="() => ImportPost(post.Id)">
-                    <i class="bi bi-arrow-90deg-left me-1"></i> Impor
-                </button>
-
-            </div>
-        }
-    </div>
+            }
+        </div>
 
     
-</div>
-@code{
+    </div>
+@code {
     // WS THING
+    private InstagramService Ws = new();
     private int posttakecount = 10;
+    private string igname = "smkndlanggu";
+    private string logtext = "";
 
     // Form
     private Articles article = new();
-    private ReceiveModel postItem = new();
+    private List<ResponsePostModel> postItem = new();
 
     private string imagePreviewUrl;
     private IBrowserFile selectedImage;
@@ -149,29 +165,38 @@
 
     private async Task TakePost()
     {
-        var req = new SendModel
+        var req = new WsDataModel
         {
             Id = Guid.NewGuid().ToString(),
-            Count = posttakecount,
+            Type = "get_posts",
+            Data = JsonDocument.Parse(JsonSerializer.Serialize(new RequestPostModel
+            {
+                Username = igname,
+                Count = posttakecount
+            })).RootElement
         };
         await Ws.SendAsync(JsonSerializer.Serialize(req));
     }
     private async Task ImportPost(string id)
     {
-        var post = postItem.Items.FirstOrDefault(x => x.Id == id);
-        if(post == null)
+        var post = postItem.FirstOrDefault(x => x.Id == id);
+        if (post == null)
         {
             Notif.Show("Postingan tidak tersedia, coba refresh halaman");
             return;
         }
-        article.Title = string.IsNullOrEmpty(post.Caption)
-    ? post.Caption
-    : (post.Caption.Contains('.')
-        ? post.Caption.Substring(0, post.Caption.IndexOf('.') + 1)
-        : (post.Caption.Length > 50 ? post.Caption.Substring(0, 50) : post.Caption));
-        article.Content = $"<p>{post.Caption}<p>";
         imagePreviewUrl = $"data:image/jpeg;base64,{await ImageUrlToBase64Async(post.ImageUrl)}";
-        await InvokeAsync(StateHasChanged);
+        // Fetch
+        var req = new WsDataModel
+        {
+            Id = Guid.NewGuid().ToString(),
+            Type = "get_detail_post",
+            Data = JsonDocument.Parse(JsonSerializer.Serialize(new RequestDetailPostModel
+            {
+                PostId = id
+            })).RootElement
+        };
+        await Ws.SendAsync(JsonSerializer.Serialize(req));
 
     }
     protected override async Task OnInitializedAsync()
@@ -186,15 +211,67 @@
     public async ValueTask DisposeAsync()
     {
         Ws.OnMessage -= HandleMessage;
-        await Ws.DisconnectAsync();
+        await Ws.DisposeAsync();
     }
-    void HandleMessage(string msg)
+    async void HandleMessage(string msg)
     {
-        ReceiveModel data = JsonSerializer.Deserialize<ReceiveModel>(msg);
+        WsDataModel? data;
+        try
+        {
+            data = JsonSerializer.Deserialize<WsDataModel>(msg);
+        }
+        catch (Exception ex)
+        {
+            return;
+        }
+        if (data == null)
+        {
+            await InvokeAsync(() => Notif.Show("Data is null"));
+            return;
+        }
+        switch (data.Type)
+        {
+            case "get_posts":
+                var posts = JsonSerializer.Deserialize<List<ResponsePostModel>>(data.Data);
 
-        postItem.Items.Clear();
-        postItem.Items.AddRange(data.Items);
-        InvokeAsync(StateHasChanged);
+                if (posts != null && posts.Count > 0)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        postItem.Clear();
+                        postItem.AddRange(posts);
+                        StateHasChanged();
+                    });
+                }
+                break;
+
+            case "get_detail_post":
+                var detailpost = JsonSerializer.Deserialize<ResponseDetailPostModel>(data.Data);
+                if(detailpost != null)
+                {
+                    await InvokeAsync(() =>
+                    {
+                        article.Content = detailpost.Caption;
+                        StateHasChanged();
+                    });
+                }
+                break;
+
+            case "log":
+                var log = JsonSerializer.Deserialize<ResponseLogModel>(data.Data);
+                await InvokeAsync(() =>
+                    {
+                        logtext = log.Message;
+                        StateHasChanged();
+                        
+                    });
+                break;
+            default:
+                await InvokeAsync(() =>
+                    Notif.Show("Unknown message type: " + data.Type)
+                );
+                break;
+        }
     }
     public async Task SaveDraft()
     {
@@ -209,6 +286,7 @@
         if (Db.Articles.Any(x => x.Slug == article.Slug || x.Title == article.Title))
         {
             Notif.Show("Judul Berita Sudah ada, silahkan gunakan judul lain!", "error");
+            return;
         }
 
         if (imagePreviewUrl != null && imagePreviewUrl.Length > 0)

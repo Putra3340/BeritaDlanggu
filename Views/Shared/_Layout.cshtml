@@ -50,36 +50,13 @@
 </head>
 <body>
     <div id="navbar-container" data-active="">
-        <div class="top-bar">
-            <div class="container">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="breaking-news flex-grow-1">
-                        <span class="breaking-badge">Terbaru</span>
-                        <span class="breaking-text" id="breakingText" style="transition: opacity 0.3s; opacity: 1;">Tim Robotik Sukses Wakili Jawa Timur di Kompetisi Nasional</span>
-                    </div>
-                    <div class="d-none d-md-flex align-items-center gap-3">
-                        <span><i class="bi bi-calendar3 me-1"></i>16 April 2026</span>
-                        @if (User.IsInRole("Admin") || User.IsInRole("Editor"))
-                        {
-                            <a href="/Admin" class="btn btn-sm dashboard-btn">
-                                <i class="bi bi-speedometer2 me-1"></i>Dashboard
-                            </a>
-                        }
-                        else
-                        {
-                            <a href="/Auth"><i class="bi bi-person me-1"></i>Login</a>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
         <nav class="navbar navbar-expand-lg main-navbar">
             <div class="container">
                 <a class="navbar-brand" href="/">
                     <img src="~/icon-dlanggu.png"
                          style="width:42px;height:42px;object-fit:contain;border-radius:10px;" />
                     <div>
-                        <div style="line-height:0.3;margin-top:10%">@ViewData[ServerSettingsKey.WebsiteName]</div>
+                        <div style="line-height:0.1;margin-top:10%">@ViewData[ServerSettingsKey.WebsiteName]</div>
                         <small style="font-size:10px;color:var(--text-muted);font-weight:400">@ViewData[ServerSettingsKey.TagLine]</small>
                     </div>
                 </a>

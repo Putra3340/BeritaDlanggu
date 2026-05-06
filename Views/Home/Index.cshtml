@@ -76,7 +76,7 @@
         <!-- News Grid -->
         <div class="col-lg-8">
             <div class="section-header">
-                <h2><i class="bi bi-newspaper me-2"></i>Berita Terbaru</h2>
+                <h2>Berita Terbaru</h2>
                 <a href="category.html" class="view-all">Lihat Semua <i class="bi bi-arrow-right"></i></a>
             </div>
             <div class="row" id="newsGrid">
@@ -85,16 +85,26 @@
                     <div class="col-md-6 col-lg-4 mb-4 fade-in">
                         <div class="news-card">
                             <div class="card-img-wrapper">
+
                                 <img src="@article.Banner" alt="@article.Title" loading="lazy">
                                 <span class="category-badge">@article.CategoryName</span>
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title"><a href="/Article/@article.Slug">@article.Title</a></h5>
                                 <p class="card-excerpt">@article.Content...</p>
-                                <div class="card-meta">
-                                    <span><i class="bi bi-person me-1"></i>@article.AuthorName</span>
-                                    <span><i class="bi bi-clock me-1"></i>@article.CreatedAt.ToString("dd MMMM yyyy")</span>
-                                    <span><i class="bi bi-eye me-1"></i>@article.ViewsCount</span>
+                                <div class="card-meta d-flex flex-column align-items-start text-start">
+                                    <span>
+                                        <i class="bi bi-person me-1"></i>@article.AuthorName
+                                    </span>
+
+                                    <div class="d-flex gap-3">
+                                        <span>
+                                            <i class="bi bi-clock me-1"></i>@article.CreatedAt.ToString("dd MMMM yyyy")
+                                        </span>
+                                        <span>
+                                            <i class="bi bi-eye me-1"></i>@article.ViewsCount
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -107,7 +117,7 @@
         <div class="col-lg-4">
             <!-- Trending -->
             <div class="sidebar-widget slide-up">
-                <h5 class="widget-title"><i class="bi bi-fire me-2 text-danger"></i>Trending</h5>
+                <h5 class="widget-title">Trending</h5>
                 <div id="trendingList">
                     @{
                         int trendingtop = 0;
@@ -128,7 +138,7 @@
 
             <!-- Pengumuman -->
             <div class="sidebar-widget slide-up">
-                <h5 class="widget-title"><i class="bi bi-megaphone-fill me-2 text-warning"></i>Pengumuman</h5>
+                <h5 class="widget-title">Pengumuman</h5>
                 <div id="announcementList">
                     @foreach (var item in Model.AnnouncementArticles)
                     {
@@ -144,7 +154,7 @@
 
             <!-- Kategori -->
             <div class="sidebar-widget slide-up">
-                <h5 class="widget-title"><i class="bi bi-tags-fill me-2"></i>Kategori</h5>
+                <h5 class="widget-title">Kategori</h5>
                 <div class="category-chips">
                     @if (ViewData["CatList"] as List<Categories> != null)
                     {

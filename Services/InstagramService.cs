@@ -6,6 +6,7 @@ namespace BeritaDlanggu.Services
     public class InstagramService : IAsyncDisposable
     {
         private ClientWebSocket _ws = new();
+        public ClientWebSocket WebSocket => _ws;
 
         public event Action<string> OnMessage;
 

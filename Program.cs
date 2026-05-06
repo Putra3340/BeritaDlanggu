@@ -40,9 +40,6 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// WS
-builder.Services.AddScoped<InstagramService>();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
