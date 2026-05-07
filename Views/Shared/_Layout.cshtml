@@ -52,12 +52,22 @@
     <div id="navbar-container" data-active="">
         <nav class="navbar navbar-expand-lg main-navbar">
             <div class="container">
-                <a class="navbar-brand" href="/">
+                @{
+                    var tagline = ViewData[ServerSettingsKey.TagLine]?.ToString();
+                    var hasTagline = !string.IsNullOrWhiteSpace(tagline);
+                }
+
+                <a class="navbar-brand d-flex align-items-center gap-2" href="/">
                     <img src="~/icon-dlanggu.png"
-                         style="width:42px;height:42px;object-fit:contain;border-radius:10px;" />
-                    <div>
-                        <div style="line-height:0.1;margin-top:10%">@ViewData[ServerSettingsKey.WebsiteName]</div>
-                        <small style="font-size:10px;color:var(--text-muted);font-weight:400">@ViewData[ServerSettingsKey.TagLine]</small>
+                         class="brand-logo" />
+
+                    <div class="brand-text @(hasTagline ? "with-tagline" : "no-tagline")">
+                        <div class="brand-name">@ViewData[ServerSettingsKey.WebsiteName]</div>
+
+                        @if (hasTagline)
+                        {
+                            <small class="brand-tagline">@tagline</small>
+                        }
                     </div>
                 </a>
                 <button class="navbar-toggler border-0 collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-expanded="false">
@@ -85,10 +95,23 @@
                             }
                         }
                     </ul>
-                    <form class="navbar-search d-none d-lg-block" action="/Search" method="GET">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" name="query" placeholder="Cari berita..." autocomplete="off">
-                    </form>
+                    <div class="navbar-search-wrapper" id="navSearch">
+                        <button type="button" class="btn btn-link p-0 search-toggle">
+                            <i class="bi bi-search"></i>
+                        </button>
+
+                        <form class="navbar-search-expand" action="/Search" method="GET">
+                            <input type="text" name="query" placeholder="Cari berita..." autocomplete="off" />
+        
+                            <button type="submit" class="btn-search">
+                                <i class="bi bi-search"></i>
+                            </button>
+
+                            <button type="button" class="btn-clear">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </nav>

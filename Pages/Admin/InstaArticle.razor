@@ -205,8 +205,20 @@
         user = authState.User;
 
         // Important
+        var wsendpoint = Db.Settings.Where(x => x.Key == ServerSettingsKey.WebsocketUrl).Select(x => x.Value).FirstOrDefault();
+        if(string.IsNullOrEmpty(wsendpoint))
+        {
+            Notif.Show("Websocket URL belum di set, silahkan atur di menu Settings > Instagram Integration", "error");
+            return;
+        }
         Ws.OnMessage += HandleMessage;
-        await Ws.ConnectAsync();
+        try
+        {
+            await Ws.ConnectAsync(wsendpoint);
+        }catch(Exception ex)
+        {
+            Notif.Show("Terjadi kesalahan saat menghubungkan ke WebSocket: " + ex.Message, "error");
+        }
     }
     public async ValueTask DisposeAsync()
     {

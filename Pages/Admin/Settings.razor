@@ -60,6 +60,10 @@
                 <label class="form-label fw-semibold">Artikel per Halaman</label>
                 <input type="number" class="form-control" id="settingPostsPerPage" min="3" max="30" @bind="ArticlePerPage">
             </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Timer Slider</label>
+                <input type="number" class="form-control" id="settingTimerSlider" min="1" max="60" @bind="TimerSlider">
+            </div>
         </div>
 
         <!-- Danger Zone -->
@@ -78,6 +82,7 @@
 
     private string IntagramIntegrationUrl = "";
     private int ArticlePerPage;
+    private int TimerSlider;
     private ClaimsPrincipal? user;
 
 
@@ -93,6 +98,7 @@
 
         IntagramIntegrationUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.WebsocketUrl).Select(x => x.Value).FirstOrDefault() ?? "";
         ArticlePerPage = int.Parse(Db.Settings.Where(x => x.Key == ServerSettingsKey.ArticlePerPage).Select(x => x.Value).FirstOrDefault() ?? "9");
+        TimerSlider = int.Parse(Db.Settings.Where(x => x.Key == ServerSettingsKey.TimerSlider).Select(x => x.Value).FirstOrDefault() ?? "5");
     }
     public void ResetColor()
     {
@@ -122,6 +128,7 @@
         UpsertSetting(ServerSettingsKey.ThemeAccentColor, ThemeAccentColor);
         UpsertSetting(ServerSettingsKey.WebsocketUrl, IntagramIntegrationUrl);
         UpsertSetting(ServerSettingsKey.ArticlePerPage, ArticlePerPage.ToString());
+        UpsertSetting(ServerSettingsKey.TimerSlider, TimerSlider.ToString());
 
         Db.SaveChanges();
         // Activity Log
@@ -186,6 +193,11 @@
             Notif.Show("Jumlah Artikel per Halaman minimal 1!", "error ");
             return false;
             
+        }
+        if(TimerSlider == 0)
+        {
+            Notif.Show("Timer Slider minimal 1 detik!", "error ");
+            return false;
         }
         return true;
             

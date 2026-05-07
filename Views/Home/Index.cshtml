@@ -26,7 +26,7 @@
     }
 }
 <section class="container mt-4">
-    <div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+    <div id="heroCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel" data-bs-interval="@(int.Parse(ViewData[ServerSettingsKey.TimerSlider]?.ToString() ?? "5") * 1000)">
         <div class="carousel-indicators" id="carouselIndicators">
             @for (int i = 0; i < Model.FeaturedArticles.Count; i++)
             {

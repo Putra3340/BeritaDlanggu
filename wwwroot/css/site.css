@@ -223,6 +223,7 @@ img {
         }
 
     .main-navbar .dropdown-menu {
+        border-radius: 3px;
         border: none;
         box-shadow: var(--shadow-lg);
         padding: 8px;
@@ -243,7 +244,7 @@ img {
 }
 
 .main-navbar .dropdown-item {
-    border-radius: var(--radius-sm);
+    border-radius: 3px;
     padding: 8px 16px;
     font-size: 14px;
     transition: all var(--transition-fast);
@@ -1858,3 +1859,99 @@ img {
 
 
 
+.brand-logo {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+/* shared */
+.brand-text {
+    display: flex;
+}
+
+    /* ✨ when tagline exists */
+    .brand-text.with-tagline {
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.1;
+    }
+
+.brand-name {
+    font-weight: 600;
+}
+
+/* 🌸 tagline style */
+.brand-tagline {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* ✨ when tagline is empty */
+.brand-text.no-tagline {
+    align-items: center;
+    height: 42px; /* match logo height */
+}
+
+/* wrapper stays same */
+.navbar-search-wrapper {
+    position: relative;
+}
+
+/* dropdown panel */
+.navbar-search-expand {
+    position: absolute;
+    top: var(--navbar-height); /* sits below navbar */
+    left: 0;
+    width: 100%;
+    background: var(--bg-navbar);
+    box-shadow: var(--shadow-lg);
+    padding: 16px 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(-20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--transition-base);
+    z-index: 1040;
+}
+
+/* active */
+.navbar-search-wrapper.active .navbar-search-expand {
+    display: block;
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* inner input */
+.navbar-search-expand input {
+    width: 420px;
+    max-width: 70%;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--gray-200);
+    padding: 10px 16px;
+    background: var(--gray-50);
+}
+
+/* buttons */
+.btn-search,
+.btn-clear {
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+/* clear logic */
+.btn-clear {
+    display: none;
+}
+
+.navbar-search-wrapper.has-text .btn-clear {
+    display: inline;
+}

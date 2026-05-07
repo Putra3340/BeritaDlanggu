@@ -10,12 +10,14 @@ namespace BeritaDlanggu.Services
 
         public event Action<string> OnMessage;
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(string url)
         {
+            
             if (_ws.State == WebSocketState.Open) return;
 
             _ws = new ClientWebSocket();
-            await _ws.ConnectAsync(new Uri("ws://localhost:8080/ws/"), CancellationToken.None);
+            await _ws.ConnectAsync(new Uri(url), CancellationToken.None);
+            
 
             _ = Task.Run(ListenLoop);
         }

@@ -18,5 +18,6 @@
         public const string ThemeAccentColor = "themeaccentcolor";
         public const string WebsocketUrl = "wsurl";
         public const string ArticlePerPage = "articleperpage";
+        public const string TimerSlider = "timerslider";
     }
 }
