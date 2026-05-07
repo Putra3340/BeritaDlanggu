@@ -74,43 +74,65 @@
                     <i class="bi bi-list fs-4"></i>
                 </button>
                 <div class="navbar-collapse collapse" id="mainNav" style="">
-                    <ul class="navbar-nav ms-auto me-3">
+                    <div class="navbar-right">
+                        <ul class="navbar-nav nav-categories">
 
-                        <li class="nav-item"><a class="nav-link " href="/">Beranda</a></li>
-                        @if (ViewData["CatList"] as List<Categories> != null)
-                        {
-                            @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
+                            <li class="nav-item">
+                                <a class="nav-link" href="/">Beranda</a>
+                            </li>
+
+                            @if (ViewData["CatList"] as List<Categories> != null)
                             {
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">@cat.Name</a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="/Kategori/@cat.Slug"><strong>Semua @cat.Name</strong></a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        @foreach (var sub in cat.SubCategories)
-                                        {
-                                            <li><a class="dropdown-item" href="/Kategori/@cat.Slug/@sub.Slug">@sub.Name</a></li>
-                                        }
-                                    </ul>
-                                </li>
+                                @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
+                                {
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle"
+                                               href="#"
+                                               data-bs-toggle="dropdown">
+                                            @cat.Name
+                                        </a>
+
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item"
+                                                       href="/Kategori/@cat.Slug">
+                                                    <strong>Semua @cat.Name</strong>
+                                                </a>
+                                            </li>
+
+                                            <li><hr class="dropdown-divider"></li>
+
+                                            @foreach (var sub in cat.SubCategories)
+                                            {
+                                                <li>
+                                                    <a class="dropdown-item"
+                                                           href="/Kategori/@cat.Slug/@sub.Slug">
+                                                        @sub.Name
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </li>
+                                }
                             }
-                        }
-                    </ul>
-                    <div class="navbar-search-wrapper" id="navSearch">
-                        <button type="button" class="btn btn-link p-0 search-toggle">
-                            <i class="bi bi-search"></i>
-                        </button>
+                            <div class="navbar-search-wrapper" id="navSearch">
+                                <button type="button" class="btn btn-link p-0 search-toggle">
+                                    <i class="bi bi-search"></i>
+                                </button>
 
-                        <form class="navbar-search-expand" action="/Search" method="GET">
-                            <input type="text" name="query" placeholder="Cari berita..." autocomplete="off" />
+                                <form class="navbar-search-expand" action="/Search" method="GET">
+                                    <input class="form-control" type="text" name="query" placeholder="Cari berita..." autocomplete="off" />
         
-                            <button type="submit" class="btn-search">
-                                <i class="bi bi-search"></i>
-                            </button>
+                                    <button type="submit" class="btn-search">
+                                        <i class="bi bi-search"></i>
+                                    </button>
 
-                            <button type="button" class="btn-clear">
-                                <i class="bi bi-x"></i>
-                            </button>
-                        </form>
+                                    <button type="button" class="btn-clear">
+                                        <i class="bi bi-x"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </ul>
                     </div>
                 </div>
             </div>

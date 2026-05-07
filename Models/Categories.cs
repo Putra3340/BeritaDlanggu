@@ -17,5 +17,7 @@ public partial class Categories
 
     public virtual ICollection<Articles> Articles { get; set; } = new List<Articles>();
 
+    public virtual ICollection<NavSettings> NavSettings { get; set; } = new List<NavSettings>();
+
     public virtual ICollection<SubCategories> SubCategories { get; set; } = new List<SubCategories>();
 }

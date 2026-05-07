@@ -21,6 +21,8 @@ public partial class Articles
 
     public string? ThumbnailUrl { get; set; }
 
+    public string? ThumbnailFull { get; set; }
+
     public int Status { get; set; }
 
     public bool IsFeatured { get; set; }
@@ -43,7 +45,7 @@ public partial class Articles
 
     public virtual Categories Cat { get; set; } = null!;
 
-    public virtual ICollection<Comments> Comments { get; set; } = new List<Comments>();
+    public virtual ICollection<NavSettings> NavSettings { get; set; } = new List<NavSettings>();
 
     public virtual SubCategories? SubCat { get; set; }
 }

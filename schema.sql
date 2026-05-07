@@ -145,3 +145,96 @@ VALUES (N'20260422020440_BackupScheme', N'10.0.6');
 COMMIT;
 GO
 
+BEGIN TRANSACTION;
+ALTER TABLE [ActivityLogs] DROP CONSTRAINT [FK_ActivityLogs_Users_UserId];
+
+ALTER TABLE [ArticleCategories] DROP CONSTRAINT [FK_ArticleCategories_Articles_ArticleId];
+
+ALTER TABLE [ArticleCategories] DROP CONSTRAINT [FK_ArticleCategories_Categories_CategoryId];
+
+ALTER TABLE [Articles] DROP CONSTRAINT [FK_Articles_Users_AuthorId];
+
+ALTER TABLE [Categories] DROP CONSTRAINT [FK_Categories_Categories_ParentId];
+
+DROP TABLE [Comments];
+
+DROP INDEX [IX_Categories_ParentId] ON [Categories];
+
+DECLARE @var nvarchar(max);
+SELECT @var = QUOTENAME([d].[name])
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Categories]') AND [c].[name] = N'ParentId');
+IF @var IS NOT NULL EXEC(N'ALTER TABLE [Categories] DROP CONSTRAINT ' + @var + ';');
+ALTER TABLE [Categories] DROP COLUMN [ParentId];
+
+DECLARE @var1 nvarchar(max);
+SELECT @var1 = QUOTENAME([d].[name])
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Categories]') AND [c].[name] = N'SortOrder');
+IF @var1 IS NOT NULL EXEC(N'ALTER TABLE [Categories] DROP CONSTRAINT ' + @var1 + ';');
+ALTER TABLE [Categories] DROP COLUMN [SortOrder];
+
+ALTER TABLE [Articles] ADD [CatId] int NOT NULL DEFAULT 0;
+
+ALTER TABLE [Articles] ADD [SubCatId] int NULL;
+
+ALTER TABLE [Articles] ADD [ThumbnailFull] nvarchar(max) NULL;
+
+DROP INDEX [IX_ActivityLogs_UserId] ON [ActivityLogs];
+DECLARE @var2 nvarchar(max);
+SELECT @var2 = QUOTENAME([d].[name])
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id] AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[ActivityLogs]') AND [c].[name] = N'UserId');
+IF @var2 IS NOT NULL EXEC(N'ALTER TABLE [ActivityLogs] DROP CONSTRAINT ' + @var2 + ';');
+UPDATE [ActivityLogs] SET [UserId] = 0 WHERE [UserId] IS NULL;
+ALTER TABLE [ActivityLogs] ALTER COLUMN [UserId] int NOT NULL;
+ALTER TABLE [ActivityLogs] ADD DEFAULT 0 FOR [UserId];
+CREATE INDEX [IX_ActivityLogs_UserId] ON [ActivityLogs] ([UserId]);
+
+CREATE TABLE [NavSettings] (
+    [Id] int NOT NULL,
+    [CatId] int NULL,
+    [Title] int NULL,
+    [ArticleId] int NULL,
+    CONSTRAINT [PK_NavSettings] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_NavSettings_Articles] FOREIGN KEY ([ArticleId]) REFERENCES [Articles] ([Id]),
+    CONSTRAINT [FK_NavSettings_Categories] FOREIGN KEY ([CatId]) REFERENCES [Categories] ([Id]) ON DELETE CASCADE
+);
+
+CREATE TABLE [SubCategories] (
+    [Id] int NOT NULL IDENTITY,
+    [ParentId] int NOT NULL,
+    [Name] nvarchar(max) NOT NULL,
+    [Slug] nvarchar(450) NULL,
+    [CreatedAt] datetime NOT NULL,
+    CONSTRAINT [PK_SubCategories] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_SubCategories_Categories] FOREIGN KEY ([ParentId]) REFERENCES [Categories] ([Id]) ON DELETE CASCADE
+);
+
+CREATE INDEX [IX_Articles_CatId] ON [Articles] ([CatId]);
+
+CREATE INDEX [IX_Articles_SubCatId] ON [Articles] ([SubCatId]);
+
+CREATE INDEX [IX_NavSettings_ArticleId] ON [NavSettings] ([ArticleId]);
+
+CREATE INDEX [IX_NavSettings_CatId] ON [NavSettings] ([CatId]);
+
+CREATE INDEX [IX_SubCategories_ParentId] ON [SubCategories] ([ParentId]);
+
+ALTER TABLE [ActivityLogs] ADD CONSTRAINT [FK_ActivityLogs_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE;
+
+ALTER TABLE [Articles] ADD CONSTRAINT [FK_Articles_Categories] FOREIGN KEY ([CatId]) REFERENCES [Categories] ([Id]) ON DELETE CASCADE;
+
+ALTER TABLE [Articles] ADD CONSTRAINT [FK_Articles_SubCategories] FOREIGN KEY ([SubCatId]) REFERENCES [SubCategories] ([Id]);
+
+ALTER TABLE [Articles] ADD CONSTRAINT [FK_Articles_Users_AuthorId] FOREIGN KEY ([AuthorId]) REFERENCES [Users] ([Id]) ON DELETE CASCADE;
+
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260507025521_DynamicNav', N'10.0.6');
+
+COMMIT;
+GO
+

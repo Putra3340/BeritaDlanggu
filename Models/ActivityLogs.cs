@@ -11,11 +11,11 @@ public partial class ActivityLogs
 
     public string? Details { get; set; }
 
-    public int? UserId { get; set; }
+    public int UserId { get; set; }
 
     public string? IpAddress { get; set; }
 
     public DateTime Timestamp { get; set; }
 
-    public virtual Users? User { get; set; }
+    public virtual Users User { get; set; } = null!;
 }

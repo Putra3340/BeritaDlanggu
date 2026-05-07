@@ -23,7 +23,7 @@ public partial class BeritaDlangguNetContext : DbContext
 
     public virtual DbSet<Categories> Categories { get; set; }
 
-    public virtual DbSet<Comments> Comments { get; set; }
+    public virtual DbSet<NavSettings> NavSettings { get; set; }
 
     public virtual DbSet<Settings> Settings { get; set; }
 
@@ -41,9 +41,7 @@ public partial class BeritaDlangguNetContext : DbContext
         {
             entity.HasIndex(e => e.UserId, "IX_ActivityLogs_UserId");
 
-            entity.HasOne(d => d.User).WithMany(p => p.ActivityLogs)
-                .HasForeignKey(d => d.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(d => d.User).WithMany(p => p.ActivityLogs).HasForeignKey(d => d.UserId);
         });
 
         modelBuilder.Entity<ArticleCategories>(entity =>
@@ -59,13 +57,10 @@ public partial class BeritaDlangguNetContext : DbContext
 
             entity.HasIndex(e => e.Slug, "IX_Articles_Slug").IsUnique();
 
-            entity.HasOne(d => d.Author).WithMany(p => p.Articles)
-                .HasForeignKey(d => d.AuthorId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(d => d.Author).WithMany(p => p.Articles).HasForeignKey(d => d.AuthorId);
 
             entity.HasOne(d => d.Cat).WithMany(p => p.Articles)
                 .HasForeignKey(d => d.CatId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Articles_Categories");
 
             entity.HasOne(d => d.SubCat).WithMany(p => p.Articles)
@@ -78,11 +73,18 @@ public partial class BeritaDlangguNetContext : DbContext
             entity.HasIndex(e => e.Slug, "IX_Categories_Slug").IsUnique();
         });
 
-        modelBuilder.Entity<Comments>(entity =>
+        modelBuilder.Entity<NavSettings>(entity =>
         {
-            entity.HasIndex(e => e.ArticleId, "IX_Comments_ArticleId");
+            entity.Property(e => e.Id).ValueGeneratedNever();
 
-            entity.HasOne(d => d.Article).WithMany(p => p.Comments).HasForeignKey(d => d.ArticleId);
+            entity.HasOne(d => d.Article).WithMany(p => p.NavSettings)
+                .HasForeignKey(d => d.ArticleId)
+                .HasConstraintName("FK_NavSettings_Articles");
+
+            entity.HasOne(d => d.Cat).WithMany(p => p.NavSettings)
+                .HasForeignKey(d => d.CatId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_NavSettings_Categories");
         });
 
         modelBuilder.Entity<Settings>(entity =>
@@ -97,7 +99,6 @@ public partial class BeritaDlangguNetContext : DbContext
 
             entity.HasOne(d => d.Parent).WithMany(p => p.SubCategories)
                 .HasForeignKey(d => d.ParentId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SubCategories_Categories");
         });
 
