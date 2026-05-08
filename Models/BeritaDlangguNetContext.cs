@@ -75,8 +75,6 @@ public partial class BeritaDlangguNetContext : DbContext
 
         modelBuilder.Entity<NavSettings>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedNever();
-
             entity.HasOne(d => d.Article).WithMany(p => p.NavSettings)
                 .HasForeignKey(d => d.ArticleId)
                 .HasConstraintName("FK_NavSettings_Articles");
@@ -85,6 +83,10 @@ public partial class BeritaDlangguNetContext : DbContext
                 .HasForeignKey(d => d.CatId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK_NavSettings_Categories");
+
+            entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
+                .HasForeignKey(d => d.ParentId)
+                .HasConstraintName("FK_NavSettings_NavSettings");
         });
 
         modelBuilder.Entity<Settings>(entity =>

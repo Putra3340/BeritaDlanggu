@@ -9,11 +9,17 @@ public partial class NavSettings
 
     public int? CatId { get; set; }
 
-    public int? Title { get; set; }
+    public int? ParentId { get; set; }
+
+    public string Title { get; set; } = null!;
 
     public int? ArticleId { get; set; }
 
     public virtual Articles? Article { get; set; }
 
     public virtual Categories? Cat { get; set; }
+
+    public virtual ICollection<NavSettings> InverseParent { get; set; } = new List<NavSettings>();
+
+    public virtual NavSettings? Parent { get; set; }
 }

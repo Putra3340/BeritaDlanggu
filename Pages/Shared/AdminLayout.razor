@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject NotificationService Notif
 @inject BeritaDlangguNetContext Db
+@implements IAsyncDisposable
 <div id="app-toast"
      class="toast-notification @type @(string.IsNullOrEmpty(message) ? "" : "show")">
 
@@ -42,6 +43,9 @@
             <div class="nav-label">Administrasi</div>
             <div class="nav-item">
                 <NavLink href="/Admin/Users" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-people"></i>Manajemen User</NavLink>
+            </div>
+            <div class="nav-item">
+                <NavLink href="/Admin/NavSettings" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-gear"></i>Pengaturan Navbar</NavLink>
             </div>
             <div class="nav-item">
                 <NavLink href="/Admin/Settings" class="nav-item" Match="NavLinkMatch.All" ActiveClass="active"><i class="bi bi-gear"></i>Pengaturan</NavLink>
@@ -156,7 +160,7 @@
         message = null;
         StateHasChanged();
     }
-    public void Dispose()
+    public async ValueTask DisposeAsync()
 {
     Notif.OnNotify -= ShowToast;
 }

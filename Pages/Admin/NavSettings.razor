@@ -1,0 +1,955 @@
+﻿@page "/Admin/NavSettings"
+@layout AdminLayout
+@attribute [Authorize(Roles = "Admin")]
+@inject NotificationService Notif
+@inject BeritaDlangguNetContext Db
+@inject AuthenticationStateProvider AuthStateProvider
+<div class="dashboard-topbar">
+    <div>
+        <h4 class="mb-1">Manajemen Navbar</h4>
+        <p class="text-muted small mb-0">
+            Kelola menu homepage, category, custom page, dan submenu.
+        </p>
+    </div>
+
+    <button class="btn btn-primary btn-sm" @onclick="SaveChanges">
+        <i class="bi bi-check-circle me-1"></i>
+        Simpan Semua
+    </button>
+</div>
+
+<div class="row g-4">
+
+    <!-- LEFT SIDE -->
+    <div class="col-xl-8">
+
+        <div class="settings-card">
+
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h5 class="mb-1">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Struktur Navbar
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Drag style preview untuk menu homepage.
+                    </p>
+                </div>
+            </div>
+
+            <div class="navbar-preview">
+
+                @foreach (var item in NavbarItems)
+                {
+                    <div class="nav-item-card">
+
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+
+                            <div class="d-flex align-items-start gap-3 flex-grow-1">
+
+                                <div class="drag-handle">
+                                    <i class="bi bi-grip-vertical"></i>
+                                </div>
+
+                                <div class="flex-grow-1">
+
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <h6 class="mb-0">@item.Title</h6>
+
+                                        @if (item.Type == "category")
+                                        {
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                Category
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success">
+                                                Custom Page
+                                            </span>
+                                        }
+
+                                        @if (item.SubItems.Any())
+                                        {
+                                            <span class="badge bg-dark">
+                                                @item.SubItems.Count Submenu
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="text-muted small mt-1">
+                                        @item.Url
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 flex-wrap">
+
+                                @if (item.Type == "custom")
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            @onclick="(() => OpenSubmenu(item))">
+                                        <i class="bi bi-plus-lg me-1"></i>
+                                        Submenu
+                                    </button>
+                                }
+
+                                <button class="btn btn-light btn-sm"
+                                        @onclick="(() => EditItem(item))">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <button class="btn btn-light btn-sm text-danger"
+                                        @onclick="(() => DeleteItem(item.Id))">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+
+                        </div>
+
+                        @if (item.SubItems.Any())
+                        {
+                            <div class="submenu-wrapper">
+
+                                @foreach (var sub in item.SubItems)
+                                {
+                                    <div class="submenu-item">
+
+                                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-arrow-return-right text-muted"></i>
+
+                                                <div>
+                                                    <div class="fw-semibold">
+                                                        @sub.Title
+                                                    </div>
+
+                                                    <div class="small text-muted">
+                                                        @sub.Url
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-light btn-sm"
+                                                        @onclick="(() => EditSubItem(item, sub))">
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+
+                                                <button class="btn btn-light btn-sm text-danger"
+                                                        @onclick="(() => DeleteSubItem(item, sub.Id))">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                }
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="col-xl-4">
+
+        <div class="settings-card mb-4">
+
+            <h5 class="mb-3">
+                <i class="bi bi-plus-square me-2"></i>
+                @(IsEditMode ? "Edit Menu" : "Tambah Menu")
+            </h5>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Tipe Menu
+                </label>
+
+                <select class="form-select" @bind="FormType">
+                    <option value="category">Category</option>
+                    <option value="custom">Custom Page</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">
+                    Nama Menu
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       placeholder="Contoh: Tentang Kami"
+                       @bind="FormTitle">
+            </div>
+
+            @if (FormType == "category")
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Pilih Category
+                    </label>
+
+                    <select class="form-select" @bind="SelectedContextId">
+                        @foreach (var category in Db.Categories.ToList())
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+            }
+            @if (FormType == "custom")
+            {
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Pilih Artikel
+                    </label>
+                    <input type="text"
+                           class="form-control mb-2"
+                           placeholder="Cari artikel..."
+                           @bind="SearchArticle" 
+                           @bind:event="oninput"         />
+
+                    <InputSelect class="form-select" @bind-Value="SelectedContextId" size="6">
+                        @foreach (var article in Db.Articles
+            .Where(x => x.Status == (int)ArticleStatus.Published &&
+                   (string.IsNullOrEmpty(SearchArticle) ||
+                    x.Title.Contains(SearchArticle)))
+            .ToList())
+                        {
+                            <option value="@article.Id">
+                                @article.Title
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+
+            <div class="d-flex gap-2">
+
+                @if (IsEditMode)
+                {
+                    <button class="btn btn-warning flex-grow-1"
+                            @onclick="UpdateItem">
+                        <i class="bi bi-pencil-square me-1"></i>
+                        Update
+                    </button>
+
+                    <button class="btn btn-light"
+                            @onclick="ResetForm">
+                        Batal
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-primary w-100"
+                            @onclick="AddItem">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Tambahkan Menu
+                    </button>
+                }
+
+            </div>
+
+        </div>
+
+        <!-- SUBMENU CARD -->
+        @if (SelectedParent != null)
+        {
+            <div class="settings-card mb-4">
+
+                <h5 class="mb-3">
+                    <i class="bi bi-diagram-3 me-2"></i>
+                    Tambah Submenu
+                </h5>
+
+                <div class="alert alert-light border small mb-3">
+                    Parent Menu:
+                    <strong>@SelectedParent.Title</strong>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Nama Submenu
+                    </label>
+
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Visi & Misi"
+                           @bind="SubmenuTitle">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Pilih Artikel
+                    </label>
+                    <input type="text"
+                           class="form-control mb-2"
+                           placeholder="Cari artikel..."
+                           @bind="SearchArticle"
+                           @bind:event="oninput" />
+
+                    <InputSelect class="form-select" @bind-Value="SelectedSubContextId" size="6">
+                        @foreach (var article in Db.Articles
+            .Where(x => x.Status == (int)ArticleStatus.Published &&
+                   (string.IsNullOrEmpty(SearchArticle) ||
+                    x.Title.Contains(SearchArticle)))
+            .ToList())
+                        {
+                            <option value="@article.Id">
+                                @article.Title
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="d-flex gap-2">
+                    @if (IsSubEditMode)
+                    {
+                        <button class="btn btn-warning flex-grow-1"
+                                @onclick="UpdateSubItem">
+                            <i class="bi bi-pencil-square me-1"></i>
+                            Update
+                        </button>
+                    }
+                    else
+                    {
+                        
+                    <button class="btn btn-primary flex-grow-1"
+                            @onclick="AddSubmenu">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Tambah Submenu
+                    </button>
+                    }
+
+                    <button class="btn btn-light"
+                            @onclick="CloseSubmenu">
+                        Tutup
+                    </button>
+                </div>
+
+            </div>
+        }
+
+        <!-- RULES -->
+        <div class="settings-card">
+
+            <h5 class="mb-3">
+                <i class="bi bi-info-circle me-2"></i>
+                Rules
+            </h5>
+
+            <ul class="small text-muted ps-3 mb-0">
+                <li class="mb-2">
+                    Category hanya menjadi menu utama.
+                </li>
+
+                <li class="mb-2">
+                    Custom page dapat memiliki submenu.
+                </li>
+
+                <li class="mb-2">
+                    Submenu hanya dapat ditambahkan ke custom page.
+                </li>
+
+                <li>
+                    Gunakan slug unik untuk setiap menu.
+                </li>
+            </ul>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+
+    public class NavbarItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string Type { get; set; } = "category";
+        public bool Visible { get; set; } = true;
+        public List<NavbarSubItem> SubItems { get; set; } = new();
+    }
+
+    public class NavbarSubItem
+    {
+        public int Id { get; set; }
+        public string Title { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+
+    private List<NavbarItem> NavbarItems = new();
+
+    private string FormTitle = "";
+    private string FormUrl = "";
+    private string FormType = "category";
+    private bool FormVisible = true;
+
+    private bool IsEditMode = false;
+    private bool IsSubEditMode = false;
+    private int EditingId;
+
+    private NavbarItem? SelectedParent;
+    private NavbarSubItem? SelectedSub;
+
+    private string SubmenuTitle = "";
+    private string SubmenuUrl = "";
+
+    private int SelectedContextId = 1;
+    private int SelectedSubContextId = 1;
+    private string SearchArticle;
+
+    private ClaimsPrincipal? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+        // fill nav form
+        var category = Db.NavSettings.Include(x=>x.Cat).Where(x => x.Cat != null).ToList();
+        if(category.Count != 0)
+        {
+            foreach(var x in category)
+            {
+                NavbarItems.Add(new NavbarItem
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Url = $"/Kategori/{x.Cat.Slug}",
+                    Type = "category",
+                    Visible = FormVisible
+                });
+            }
+        };
+        // no child
+        var customnav = Db.NavSettings.Include(x=>x.Article).Where(x => x.Article != null && x.Parent == null).ToList();
+        if(customnav.Count != 0)
+        {
+            foreach(var x in customnav)
+            {
+                NavbarItems.Add(new NavbarItem
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Url = $"/Article/{x.Article.Slug}",
+                    Type = "custom",
+                    Visible = FormVisible
+                });
+            }
+        };
+        var customsubnav = Db.NavSettings.Include(x=>x.Article).Where(x => x.Article != null && x.Parent != null).ToList();
+        if(customsubnav.Count != 0)
+        {
+            foreach(var x in customsubnav)
+            {
+                var parent = NavbarItems.FirstOrDefault(n => n.Id == x.ParentId);
+                parent.SubItems.Add(new NavbarSubItem { Id = x.Id, Title = x.Title, Url = $"/Article/{x.Article.Slug}" });
+            }
+        };
+
+        // Reorder by id
+        NavbarItems = NavbarItems.OrderBy(x => x.Id).ToList();
+    }
+    private void ReloadNav()
+    {
+        NavbarItems.Clear();
+        // fill nav form
+        var category = Db.NavSettings.Include(x => x.Cat).Where(x => x.Cat != null).ToList();
+        if (category.Count != 0)
+        {
+            foreach (var x in category)
+            {
+                NavbarItems.Add(new NavbarItem
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Url = $"/Kategori/{x.Cat.Slug}",
+                    Type = "category",
+                    Visible = FormVisible
+                });
+            }
+        }
+        ;
+        // no child
+        var customnav = Db.NavSettings.Include(x => x.Article).Where(x => x.Article != null && x.Parent == null).ToList();
+        if (customnav.Count != 0)
+        {
+            foreach (var x in customnav)
+            {
+                NavbarItems.Add(new NavbarItem
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Url = $"/Article/{x.Article.Slug}",
+                    Type = "custom",
+                    Visible = FormVisible
+                });
+            }
+        }
+        ;
+        var customsubnav = Db.NavSettings.Include(x => x.Article).Where(x => x.Article != null && x.Parent != null).ToList();
+        if (customsubnav.Count != 0)
+        {
+            foreach (var x in customsubnav)
+            {
+                var parent = NavbarItems.FirstOrDefault(n => n.Id == x.ParentId);
+                parent.SubItems.Add(new NavbarSubItem { Id = x.Id, Title = x.Title, Url = $"/Article/{x.Article.Slug}" });
+            }
+        }
+        ;
+
+        // Reorder by id
+        NavbarItems = NavbarItems.OrderBy(x => x.Id).ToList();
+    }
+
+    private void AddItem()
+    {
+        if (string.IsNullOrWhiteSpace(FormTitle) || SelectedContextId == 0)
+        {
+            Notif.Show("Form menu belum lengkap!", "error");
+            return;
+        }
+
+        // DB operation
+        if(FormType == "category")
+        {
+            var cat = Db.Categories.FirstOrDefault(x=>x.Id == SelectedContextId);
+            if (cat == null)
+            {
+                Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+                return;
+            }
+            var nav = new BeritaDlanggu.Models.NavSettings()
+                {
+                    Title = FormTitle,
+                    Cat = cat,
+                };
+            Db.NavSettings.Add(nav);
+            Db.SaveChanges();
+
+            // FORM
+
+            NavbarItems.Add(new NavbarItem
+            {
+                Id = nav.Id,
+                Title = FormTitle,
+                Url = $"/Kategori/{cat.Slug}",
+                Type = FormType,
+                Visible = FormVisible
+            });
+        }
+        else
+        {
+            var article = Db.Articles.FirstOrDefault(x => x.Id == SelectedContextId);
+            if (article == null)
+            {
+                Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+                return;
+            }
+            var nav = new BeritaDlanggu.Models.NavSettings()
+            {
+                Title = FormTitle,
+                ArticleId = SelectedContextId,
+            };
+            Db.NavSettings.Add(nav);
+            Db.SaveChanges();
+
+            NavbarItems.Add(new NavbarItem
+            {
+                Id = nav.Id,
+                Title = FormTitle,
+                Url = $"/Article/{article.Slug}",
+                Type = FormType,
+                Visible = FormVisible
+            });
+        }
+
+
+        ResetForm();
+
+        var activity = new BeritaDlanggu.Models.ActivityLogs()
+        {
+            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            Action = "create",
+            Details = $"Menambahkan menu baru: {FormTitle}",
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+
+        Notif.Show("Menu berhasil ditambahkan!", "success");
+    }
+
+    private void EditItem(NavbarItem item)
+    {
+        IsEditMode = true;
+        EditingId = item.Id;
+
+        FormTitle = item.Title;
+        FormUrl = item.Url;
+        FormType = item.Type;
+        FormVisible = item.Visible;
+    }
+
+    private void UpdateItem()
+    {
+        var item = NavbarItems.FirstOrDefault(x => x.Id == EditingId);
+
+        if (item == null)
+            return;
+
+
+        if(FormType == "category")
+        {
+            var nav = Db.NavSettings.Include(x=>x.Cat).FirstOrDefault(x=>x.Id == item.Id);
+            if(nav == null)
+            {
+                Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+                return;
+            }
+            nav.Title = FormTitle;
+            nav.Cat = Db.Categories.FirstOrDefault(x => x.Id == SelectedContextId);
+
+            // cleanup
+            nav.Article = null;
+
+            Db.SaveChanges();
+
+            // form
+            item.Title = FormTitle;
+            item.Url = $"/Kategori/{nav.Cat.Slug}";
+            item.Type = FormType;
+            item.Visible = FormVisible;
+        }
+        else
+        {
+            var nav = Db.NavSettings.Include(x => x.Article).FirstOrDefault(x => x.Id == item.Id);
+            if (nav == null)
+            {
+                Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+                return;
+            }
+            nav.Title = FormTitle;
+            nav.Article = Db.Articles.FirstOrDefault(x=>x.Id == SelectedContextId);
+
+            // cleanup
+            nav.Cat = null;
+
+            Db.SaveChanges();
+
+            // form
+            item.Title = FormTitle;
+            item.Url = $"/Article/{nav.Article.Slug}";
+            item.Type = FormType;
+            item.Visible = FormVisible;
+        }
+
+        ResetForm();
+        var activity = new BeritaDlanggu.Models.ActivityLogs()
+        {
+            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            Action = "update",
+            Details = $"Memperbarui menu: {FormTitle}",
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+        Notif.Show("Menu berhasil diperbarui!", "success");
+    }
+
+    private void DeleteItem(int id)
+    {
+        var item = NavbarItems.FirstOrDefault(x => x.Id == id);
+
+        if (item == null)
+            return;
+
+        var nav = Db.NavSettings.Include(x => x.Cat).FirstOrDefault(x => x.Id == item.Id);
+        if (nav == null)
+        {
+            Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+            return;
+        }
+        Db.NavSettings.Remove(nav);
+        Db.SaveChanges();
+
+        NavbarItems.Remove(item);
+        ReloadNav();
+        var activity = new BeritaDlanggu.Models.ActivityLogs()
+        {
+            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            Action = "delete",
+            Details = $"Menghapus menu: {item.Title}",
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+        Notif.Show("Menu berhasil dihapus!", "success");
+    }
+
+    private void OpenSubmenu(NavbarItem item)
+    {
+        SelectedParent = item;
+        IsSubEditMode = false;
+        ResetForm();
+    }
+
+    private void CloseSubmenu()
+    {
+        SelectedParent = null;
+        SelectedSub = null;
+        SubmenuTitle = "";
+        SubmenuUrl = "";
+    }
+
+    private void AddSubmenu()
+    {
+        if (SelectedParent == null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(SubmenuTitle))
+        {
+            Notif.Show("Submenu belum lengkap!", "error");
+            return;
+        }
+
+        var parent = Db.NavSettings.FirstOrDefault(x => x.Id == SelectedParent.Id);
+        if (parent == null)
+        {
+            Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+            return;
+        }
+        var article = Db.Articles.FirstOrDefault(x => x.Id == SelectedSubContextId);
+        if (article == null)
+        {
+            Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+            return;
+        }
+        var nav = new BeritaDlanggu.Models.NavSettings()
+            {
+                Parent = parent,
+                Title = SubmenuTitle,
+                Article = article,
+            };
+
+        Db.NavSettings.Add(nav);
+        Db.SaveChanges();
+
+        SelectedParent.SubItems.Add(new NavbarSubItem
+        {
+            Id = nav.Id,
+            Title = SubmenuTitle,
+            Url = $"/Article/{nav.Article.Slug}"
+        });
+
+        SubmenuTitle = "";
+        SubmenuUrl = "";
+        
+        var activity = new BeritaDlanggu.Models.ActivityLogs()
+        {
+            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            Action = "create",
+            Details = $"Menambahkan submenu baru: {SubmenuTitle}",
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+
+        Notif.Show("Submenu berhasil ditambahkan!", "success");
+    }
+
+    private void DeleteSubItem(NavbarItem parent, int id)
+    {
+        var sub = parent.SubItems.FirstOrDefault(x => x.Id == id);
+
+        if (sub == null)
+            return;
+
+        var nav = Db.NavSettings.Include(x => x.Cat).FirstOrDefault(x => x.Id == sub.Id && x.Article != null);
+        if (nav == null)
+        {
+            Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+            return;
+        }
+        Db.NavSettings.Remove(nav);
+        Db.SaveChanges();
+        parent.SubItems.Remove(sub);
+
+        ReloadNav();
+        var activity = new BeritaDlanggu.Models.ActivityLogs()
+        {
+            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            Action = "delete",
+            Details = $"Menghapus submenu: {sub.Title}",
+            Timestamp = DateTime.Now
+        };
+        Notif.Show("Submenu berhasil dihapus!", "success");
+    }
+
+    private void EditSubItem(NavbarItem parent, NavbarSubItem sub)
+    {
+        SelectedParent = parent;
+        SelectedSub = sub;
+
+        SubmenuTitle = sub.Title;
+        SubmenuUrl = sub.Url;
+        IsSubEditMode = true;
+    }
+    private void UpdateSubItem()
+    {
+        var item = SelectedSub;
+
+        if (item == null)
+            return;
+
+
+            var nav = Db.NavSettings.Include(x => x.Article).FirstOrDefault(x => x.Id == item.Id);
+            if (nav == null)
+            {
+                Notif.Show("Ada kesalahan, Coba Refresh Halaman!");
+                return;
+            }
+            nav.Title = SubmenuTitle;
+            nav.Article = Db.Articles.FirstOrDefault(x => x.Id == SelectedSubContextId);
+
+            // cleanup
+            nav.Cat = null;
+
+            Db.SaveChanges();
+
+            // form
+            item.Title = SubmenuTitle;
+            item.Url = $"/Article/{nav.Article.Slug}";
+
+        ResetForm();
+        var activity = new BeritaDlanggu.Models.ActivityLogs()
+        {
+            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            Action = "update",
+            Details = $"Memperbarui submenu: {SubmenuTitle}",
+            Timestamp = DateTime.Now
+        };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
+        Notif.Show("Menu berhasil diperbarui!", "success");
+    }
+
+    private void ResetForm()
+    {
+        FormTitle = "";
+        FormUrl = "";
+        FormType = "category";
+        FormVisible = true;
+
+        EditingId = 0;
+        IsEditMode = false;
+        IsSubEditMode = false;
+    }
+
+    private void SaveChanges()
+    {
+        Notif.Show("Navbar berhasil disimpan!", "success");
+    }
+
+}
+
+<style>
+
+    .settings-card {
+        background: #fff;
+        border-radius: 22px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid #f1f1f1;
+    }
+
+    .dashboard-topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .navbar-preview {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .nav-item-card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 18px;
+        border: 1px solid #ececec;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+        transition: 0.25s ease;
+    }
+
+        .nav-item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        }
+
+    .drag-handle {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+
+    .submenu-wrapper {
+        margin-top: 18px;
+        padding-left: 24px;
+        border-left: 2px dashed #d6d6d6;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .submenu-item {
+        background: #fafafa;
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid #efefef;
+    }
+
+    @@media (max-width: 768px) {
+
+        .settings-card {
+            padding: 18px;
+            border-radius: 18px;
+        }
+
+        .nav-item-card {
+            padding: 16px;
+        }
+
+        .submenu-wrapper {
+            padding-left: 14px;
+        }
+
+        .dashboard-topbar h4 {
+            font-size: 1.2rem;
+        }
+    }
+
+</style>
