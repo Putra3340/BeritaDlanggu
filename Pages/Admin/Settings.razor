@@ -26,6 +26,50 @@
                 <input type="text" class="form-control" @bind="Tagline">
             </div>
             <div class="mb-3">
+                <label class="form-label fw-semibold">Deskripsi Footer</label>
+                <input type="text" class="form-control" @bind="FooterDescription">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Instagram URL</label>
+                <input type="text" class="form-control" @bind="InstagramUrl">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Facebook URL</label>
+                <input type="text" class="form-control" @bind="FacebookUrl">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Twitter URL</label>
+                <input type="text" class="form-control" @bind="TwitterUrl">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Youtube URL</label>
+                <input type="text" class="form-control" @bind="YoutubeUrl">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Tiktok URL</label>
+                <input type="text" class="form-control" @bind="TiktokUrl">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Alamat Footer</label>
+                <input type="text" class="form-control" @bind="FooterAddress">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email Footer</label>
+                <input type="text" class="form-control" @bind="FooterEmail">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Telepon Footer</label>
+                <input type="text" class="form-control" @bind="FooterPhone">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Artikel per Halaman</label>
+                <input type="number" class="form-control" id="settingPostsPerPage" min="3" max="30" @bind="ArticlePerPage">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Timer Slider</label>
+                <input type="number" class="form-control" id="settingTimerSlider" min="1" max="60" @bind="TimerSlider">
+            </div>
+            <div class="mb-3">
                 <label class="form-label fw-semibold">Warna Tema</label>
                 <div class="d-flex align-items-center gap-3">
                     <input type="color" class="form-control form-control-color color-preview" @bind="ThemeColor">
@@ -45,6 +89,7 @@
                     <button class="btn btn-warning btn-sm" @onclick="ResetColor"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset Warna</button>
                 </div>
             </div>
+
         </div>
     </div>
 
@@ -56,14 +101,7 @@
                 <label class="form-label fw-semibold">External Websocket Endpoint</label>
                 <input type="text" class="form-control" id="settingApiEndpoint" @bind="IntagramIntegrationUrl">
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Artikel per Halaman</label>
-                <input type="number" class="form-control" id="settingPostsPerPage" min="3" max="30" @bind="ArticlePerPage">
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Timer Slider</label>
-                <input type="number" class="form-control" id="settingTimerSlider" min="1" max="60" @bind="TimerSlider">
-            </div>
+            
         </div>
 
         <!-- Danger Zone -->
@@ -79,6 +117,16 @@
     private string Tagline = "";
     private string ThemeColor = "";
     private string ThemeAccentColor = "";
+
+    private string FooterDescription = "";
+    private string InstagramUrl = "";
+    private string FacebookUrl = "";
+    private string TwitterUrl = "";
+    private string TiktokUrl = "";
+    private string YoutubeUrl = "";
+    private string FooterAddress = "";
+    private string FooterEmail = "";
+    private string FooterPhone = "";
 
     private string IntagramIntegrationUrl = "";
     private int ArticlePerPage;
@@ -99,6 +147,17 @@
         IntagramIntegrationUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.WebsocketUrl).Select(x => x.Value).FirstOrDefault() ?? "";
         ArticlePerPage = int.Parse(Db.Settings.Where(x => x.Key == ServerSettingsKey.ArticlePerPage).Select(x => x.Value).FirstOrDefault() ?? "9");
         TimerSlider = int.Parse(Db.Settings.Where(x => x.Key == ServerSettingsKey.TimerSlider).Select(x => x.Value).FirstOrDefault() ?? "5");
+
+        // Footer thing
+            FooterDescription = Db.Settings.Where(x => x.Key == ServerSettingsKey.FooterDescription).Select(x => x.Value).FirstOrDefault() ?? "";
+            InstagramUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.InstagramUrl).Select(x => x.Value).FirstOrDefault() ?? "";
+            FacebookUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.FacebookUrl).Select(x => x.Value).FirstOrDefault() ?? "";
+            TwitterUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.TwitterUrl).Select(x => x.Value).FirstOrDefault() ?? "";
+            TiktokUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.TiktokUrl).Select(x => x.Value).FirstOrDefault() ?? "";
+            YoutubeUrl = Db.Settings.Where(x => x.Key == ServerSettingsKey.YoutubeUrl).Select(x => x.Value).FirstOrDefault() ?? "";
+            FooterAddress = Db.Settings.Where(x => x.Key == ServerSettingsKey.FooterAddress).Select(x => x.Value).FirstOrDefault() ?? "";
+            FooterEmail = Db.Settings.Where(x => x.Key == ServerSettingsKey.FooterEmail).Select(x => x.Value).FirstOrDefault() ?? "";
+        FooterPhone = Db.Settings.Where(x => x.Key == ServerSettingsKey.FooterPhone).Select(x => x.Value).FirstOrDefault() ?? "";
     }
     public void ResetColor()
     {
@@ -129,6 +188,15 @@
         UpsertSetting(ServerSettingsKey.WebsocketUrl, IntagramIntegrationUrl);
         UpsertSetting(ServerSettingsKey.ArticlePerPage, ArticlePerPage.ToString());
         UpsertSetting(ServerSettingsKey.TimerSlider, TimerSlider.ToString());
+        UpsertSetting(ServerSettingsKey.FooterDescription, FooterDescription);
+        UpsertSetting(ServerSettingsKey.InstagramUrl, InstagramUrl);
+        UpsertSetting(ServerSettingsKey.FacebookUrl, FacebookUrl);
+        UpsertSetting(ServerSettingsKey.TwitterUrl, TwitterUrl);
+        UpsertSetting(ServerSettingsKey.TiktokUrl, TiktokUrl);
+        UpsertSetting(ServerSettingsKey.YoutubeUrl, YoutubeUrl);
+        UpsertSetting(ServerSettingsKey.FooterAddress, FooterAddress);
+        UpsertSetting(ServerSettingsKey.FooterEmail, FooterEmail);
+        UpsertSetting(ServerSettingsKey.FooterPhone, FooterPhone);
 
         Db.SaveChanges();
         // Activity Log

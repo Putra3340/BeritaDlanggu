@@ -1,4 +1,5 @@
-﻿@{
+﻿@using BeritaDlanggu.Models.ViewModels
+@{
     string PrimaryColor = ViewData[ServerSettingsKey.ThemeColor] as string;
     string AccentColor = ViewData[ServerSettingsKey.ThemeAccentColor] as string;
     string Adjust(string hex, int percent)
@@ -81,38 +82,51 @@
                                 <a class="nav-link" href="/">Beranda</a>
                             </li>
 
-                            @if (ViewData["CatList"] as List<Categories> != null)
+                            @if (ViewData["NavbarItems"] as List<NavbarItem> != null)
                             {
-                                @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
+                                @foreach (var nav in (ViewData["NavbarItems"] as List<NavbarItem>))
                                 {
-                                    <li class="nav-item dropdown">
-                                        <a class="nav-link dropdown-toggle"
-                                               href="#"
-                                               data-bs-toggle="dropdown">
-                                            @cat.Name
-                                        </a>
+                                        @if(nav.SubItems.Count == 0)
+                                        {
+                                        <li class="nav-item">
+                                            <a class="nav-link" href="@nav.Url">@nav.Title</a>
+                                        </li>
+                                        }
+                                        else
+                                        {
+                                        <li class="nav-item dropdown">
+                                            <a class="nav-link dropdown-toggle"
+                                                   href="#"
+                                                   data-bs-toggle="dropdown">
+                                                @nav.Title
+                                            </a>
 
-                                        <ul class="dropdown-menu">
-                                            <li>
-                                                <a class="dropdown-item"
-                                                       href="/Kategori/@cat.Slug">
-                                                    <strong>Semua @cat.Name</strong>
-                                                </a>
-                                            </li>
+                                            <ul class="dropdown-menu">
+                                                @if (!nav.Url.StartsWith("/Article/"))
+                                                {
+                                                    
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                               href="@(nav.Url)">
+                                                            <strong>Semua @nav.Title</strong>
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                }
 
-                                            <li><hr class="dropdown-divider"></li>
 
-                                            @foreach (var sub in cat.SubCategories)
-                                            {
-                                                <li>
-                                                    <a class="dropdown-item"
-                                                           href="/Kategori/@cat.Slug/@sub.Slug">
-                                                        @sub.Name
-                                                    </a>
-                                                </li>
-                                            }
-                                        </ul>
-                                    </li>
+                                                @foreach (var sub in nav.SubItems)
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item"
+                                                               href="@sub.Url">
+                                                            @sub.Title
+                                                        </a>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </li>
+                                        }
                                 }
                             }
                             <div class="navbar-search-wrapper" id="navSearch">
@@ -149,22 +163,51 @@
             <div class="row g-4">
                 <div class="col-lg-4 footer-about">
                     <h5><i class="bi bi-mortarboard-fill me-2"></i>@ViewData[ServerSettingsKey.WebsiteName]</h5>
-                    <p>Portal berita resmi SMKN 1 Dlanggu yang menyajikan informasi terkini seputar kegiatan sekolah, prestasi siswa, pengumuman, dan berbagai agenda penting.</p>
+                    @if(ViewData[ServerSettingsKey.FooterDescription] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.FooterDescription].ToString()))
+                    {
+                        <p>@ViewData[ServerSettingsKey.FooterDescription]</p>
+                    }
                     <div class="footer-social mt-3">
-                        <a href="#" title="Facebook"><i class="bi bi-facebook"></i></a>
-                        <a href="#" title="Instagram"><i class="bi bi-instagram"></i></a>
-                        <a href="#" title="YouTube"><i class="bi bi-youtube"></i></a>
-                        <a href="#" title="Twitter"><i class="bi bi-twitter-x"></i></a>
+                        @if(ViewData[ServerSettingsKey.FacebookUrl] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.FacebookUrl].ToString()))
+                        {
+                            <a href="@ViewData[ServerSettingsKey.FacebookUrl]" target="_blank" class="me-2">
+                                <i class="bi bi-facebook"></i>
+                            </a>
+                        }
+                        @if(ViewData[ServerSettingsKey.InstagramUrl] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.InstagramUrl].ToString()))
+                        {
+                            <a href="@ViewData[ServerSettingsKey.InstagramUrl]" target="_blank" class="me-2">
+                                <i class="bi bi-instagram"></i>
+                                                            </a>
+                        }
+                        @if(ViewData[ServerSettingsKey.TiktokUrl] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.TiktokUrl].ToString()))
+                        {
+                            <a href="@ViewData[ServerSettingsKey.TiktokUrl]" target="_blank" class="me-2">
+                                <i class="bi bi-tiktok"></i>
+                            </a>
+                        }
+                        @if(ViewData[ServerSettingsKey.YoutubeUrl] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.YoutubeUrl].ToString()))
+                        {
+                            <a href="@ViewData[ServerSettingsKey.YoutubeUrl]" target="_blank" class="me-2">
+                                <i class="bi bi-youtube"></i>
+                            </a>
+                        }
+                        @if(ViewData[ServerSettingsKey.TwitterUrl] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.TwitterUrl].ToString()))
+                        {
+                            <a href="@ViewData[ServerSettingsKey.TwitterUrl]" target="_blank" class="me-2">
+                                <i class="bi bi-twitter"></i>
+                            </a>
+                        }
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-4">
                     <h5>Kategori</h5>
                     <ul class="list-unstyled footer-links">
-                        @if (ViewData["CatList"] as List<Categories> != null)
+                        @if (ViewData["NavbarItems"] as List<NavbarItem> != null)
                         {
-                            @foreach (var cat in (ViewData["CatList"] as List<Categories>).Take(4))
+                            @foreach (var nav in (ViewData["NavbarItems"] as List<NavbarItem>))
                             {
-                                <li><a href="/Kategori/@cat.Slug">@cat.Name</a></li>
+                                <li><a href="@nav.Url">@nav.Title</a></li>
                             }
                         }
                     </ul>
@@ -172,9 +215,18 @@
                 <div class="col-lg-3 col-md-4">
                     <h5>Kontak</h5>
                     <ul class="list-unstyled footer-contact">
-                        <li><i class="bi bi-geo-alt-fill"></i><span>Jl. Raya Dlanggu, Kec. Dlanggu, Kab. Mojokerto, Jawa Timur</span></li>
-                        <li><i class="bi bi-telephone-fill"></i><span>(0321) 123456</span></li>
-                        <li><i class="bi bi-envelope-fill"></i><span>info@smkn1dlanggu.sch.id</span></li>
+                        @if (ViewData[ServerSettingsKey.FooterAddress] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.FooterAddress].ToString()))
+                        {
+                            <li><i class="bi bi-geo-alt-fill"></i><span>@ViewData[ServerSettingsKey.FooterAddress]</span></li>
+                        }
+                        @if(ViewData[ServerSettingsKey.FooterPhone] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.FooterPhone].ToString()))
+                        {
+                            <li><i class="bi bi-telephone-fill"></i><span>@ViewData[ServerSettingsKey.FooterPhone]</span></li>
+                        }
+                        @if(ViewData[ServerSettingsKey.FooterEmail] != null && !string.IsNullOrEmpty(ViewData[ServerSettingsKey.FooterEmail].ToString()))
+                        {
+                            <li><i class="bi bi-envelope-fill"></i><span>@ViewData[ServerSettingsKey.FooterEmail]</span></li>
+                        }
                     </ul>
                 </div>
             </div>
@@ -185,15 +237,9 @@
                 <!-- perfectly centered -->
                 <div class="text-center">
                     &copy; @DateTime.Now.ToString("yyyy")
-                    @ViewData[ServerSettingsKey.WebsiteName]. All rights reserved.
-                </div>
-
-                <!-- right side -->
-                <div class="position-absolute top-50 end-0 translate-middle-y">
-                    Powered By
+                    @ViewData[ServerSettingsKey.WebsiteName]. All rights reserved. - Powered By
                     <a href="https://www.linkedin.com/in/rahmad-syaputra/">Putra3340</a>
                 </div>
-
             </div>
         </div>
     </footer>

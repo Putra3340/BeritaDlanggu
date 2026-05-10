@@ -19,5 +19,14 @@
         public const string WebsocketUrl = "wsurl";
         public const string ArticlePerPage = "articleperpage";
         public const string TimerSlider = "timerslider";
+        public const string FooterDescription = "footerdescription";
+        public const string InstagramUrl = "instagramurl";
+        public const string FacebookUrl = "facebookurl";
+        public const string TwitterUrl = "twitterurl";
+        public const string YoutubeUrl = "youtubeurl";
+        public const string TiktokUrl = "tiktokurl";
+        public const string FooterAddress = "footeraddress";
+        public const string FooterEmail = "footeremail";
+        public const string FooterPhone = "footerphone";
     }
 }

@@ -268,7 +268,7 @@
 
                 <h5 class="mb-3">
                     <i class="bi bi-diagram-3 me-2"></i>
-                    Tambah Submenu
+                    @(!IsSubEditMode ? "Tambah Submenu" : "Edit Submenu")
                 </h5>
 
                 <div class="alert alert-light border small mb-3">
@@ -359,10 +359,6 @@
                 <li class="mb-2">
                     Submenu hanya dapat ditambahkan ke custom page.
                 </li>
-
-                <li>
-                    Gunakan slug unik untuk setiap menu.
-                </li>
             </ul>
 
         </div>
@@ -372,24 +368,6 @@
 </div>
 
 @code {
-
-    public class NavbarItem
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Url { get; set; } = "";
-        public string Type { get; set; } = "category";
-        public bool Visible { get; set; } = true;
-        public List<NavbarSubItem> SubItems { get; set; } = new();
-    }
-
-    public class NavbarSubItem
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Url { get; set; } = "";
-    }
-
     private List<NavbarItem> NavbarItems = new();
 
     private string FormTitle = "";
@@ -581,7 +559,7 @@
 
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
-            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
             Action = "create",
             Details = $"Menambahkan menu baru: {FormTitle}",
             Timestamp = DateTime.Now
@@ -659,7 +637,7 @@
         ResetForm();
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
-            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
             Action = "update",
             Details = $"Memperbarui menu: {FormTitle}",
             Timestamp = DateTime.Now
@@ -689,7 +667,7 @@
         ReloadNav();
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
-            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
             Action = "delete",
             Details = $"Menghapus menu: {item.Title}",
             Timestamp = DateTime.Now
@@ -759,7 +737,7 @@
         
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
-            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
             Action = "create",
             Details = $"Menambahkan submenu baru: {SubmenuTitle}",
             Timestamp = DateTime.Now
@@ -790,7 +768,7 @@
         ReloadNav();
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
-            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
             Action = "delete",
             Details = $"Menghapus submenu: {sub.Title}",
             Timestamp = DateTime.Now
@@ -836,7 +814,7 @@
         ResetForm();
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
-            UserId = int.Parse(user.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "0"),
+            UserId = int.Parse(user.FindFirst("Id")?.Value),
             Action = "update",
             Details = $"Memperbarui submenu: {SubmenuTitle}",
             Timestamp = DateTime.Now
