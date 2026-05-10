@@ -1,5 +1,6 @@
 ﻿using BeritaDlanggu.Models;
 using BeritaDlanggu.Models.ViewModels;
+using BeritaDlanggu.Pages.Admin;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -166,6 +167,40 @@ namespace BeritaDlanggu.Controllers
             }
             
             return View(model);
+        }
+
+        public async Task<IActionResult> LoadMoreArticles(
+    int page = 1,
+    int cat = 0,
+    int subcat = 0)
+        {
+            var articlesPerPage = _context.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ArticlePerPage);
+            int pageSize = int.Parse(articlesPerPage?.Value ?? "9");
+
+            var query = _context.Articles
+                .Where(x => x.Status == (int)ArticleStatus.Published)
+                .AsQueryable();
+
+            // category filter
+            if (cat > 0)
+            {
+                query = query.Where(x => x.CatId == cat);
+            }
+
+            // sub category filter
+            if (subcat > 0)
+            {
+                query = query.Where(x => x.SubCatId == subcat);
+            }
+
+            var articles = await query
+                .Include(x=>x.Cat).Include(x=>x.SubCat).Include(x=>x.Author)
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return PartialView("_NewsGrid", articles);
         }
     }
 }

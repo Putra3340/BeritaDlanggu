@@ -555,7 +555,6 @@
         }
 
 
-        ResetForm();
 
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
@@ -566,6 +565,7 @@
         };
         Db.ActivityLogs.Add(activity);
         Db.SaveChanges();
+        ResetForm();
 
         Notif.Show("Menu berhasil ditambahkan!", "success");
     }
@@ -634,7 +634,6 @@
             item.Visible = FormVisible;
         }
 
-        ResetForm();
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
             UserId = int.Parse(user.FindFirst("Id")?.Value),
@@ -644,6 +643,7 @@
         };
         Db.ActivityLogs.Add(activity);
         Db.SaveChanges();
+        ResetForm();
         Notif.Show("Menu berhasil diperbarui!", "success");
     }
 
@@ -732,9 +732,7 @@
             Url = $"/Article/{nav.Article.Slug}"
         });
 
-        SubmenuTitle = "";
-        SubmenuUrl = "";
-        
+
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
             UserId = int.Parse(user.FindFirst("Id")?.Value),
@@ -744,6 +742,8 @@
         };
         Db.ActivityLogs.Add(activity);
         Db.SaveChanges();
+        SubmenuTitle = "";
+        SubmenuUrl = "";
 
         Notif.Show("Submenu berhasil ditambahkan!", "success");
     }
@@ -773,6 +773,8 @@
             Details = $"Menghapus submenu: {sub.Title}",
             Timestamp = DateTime.Now
         };
+        Db.ActivityLogs.Add(activity);
+        Db.SaveChanges();
         Notif.Show("Submenu berhasil dihapus!", "success");
     }
 
@@ -811,7 +813,6 @@
             item.Title = SubmenuTitle;
             item.Url = $"/Article/{nav.Article.Slug}";
 
-        ResetForm();
         var activity = new BeritaDlanggu.Models.ActivityLogs()
         {
             UserId = int.Parse(user.FindFirst("Id")?.Value),
@@ -821,6 +822,7 @@
         };
         Db.ActivityLogs.Add(activity);
         Db.SaveChanges();
+        ResetForm();
         Notif.Show("Menu berhasil diperbarui!", "success");
     }
 

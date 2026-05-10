@@ -82,35 +82,13 @@
                 <a href="category.html" class="view-all">Lihat Semua <i class="bi bi-arrow-right"></i></a>
             </div>
             <div class="row" id="newsGrid">
-                @foreach (var article in Model.LatestArticles)
-                {
-                    <div class="col-md-6 col-lg-4 mb-4 fade-in">
-                        <div class="news-card">
-                            <div class="card-img-wrapper">
-                                <img src="@article.Banner" alt="@article.Title" loading="lazy">
-                                <span class="category-badge">@article.CategoryName</span>
-                            </div>
-                            <div class="card-body">
-                                <h5 class="card-title"><a href="/Article/@article.Slug">@article.Title</a></h5>
-                                <p class="card-excerpt">@article.Content...</p>
-                                <div class="card-meta d-flex flex-column align-items-start text-start">
-                                    <span>
-                                        <i class="bi bi-person me-1"></i>@article.AuthorName
-                                    </span>
-
-                                    <div class="d-flex gap-3">
-                                        <span>
-                                            <i class="bi bi-clock me-1"></i>@article.CreatedAt.ToString("dd MMMM yyyy")
-                                        </span>
-                                        <span>
-                                            <i class="bi bi-eye me-1"></i>@article.ViewsCount
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                }
+                @await Html.PartialAsync("_NewsGrid", Model.LatestArticles)
+            </div>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary px-4"
+                        id="loadMoreBtn">
+                    Load More
+                </button>
             </div>
         </div>
 
@@ -173,3 +151,49 @@
         </div>
     </div>
 </section>
+<script>
+    let currentPage = 1;
+    let loading = false;
+
+    async function loadMore() {
+
+        if (loading) return;
+
+        loading = true;
+
+        currentPage++;
+
+        const btn = document.getElementById("loadMoreBtn");
+
+        btn.innerHTML = "Loading...";
+
+        try {
+
+            const response = await fetch(`/Home/LoadMoreArticles?page=${currentPage}`);
+
+            const html = await response.text();
+
+            if (html.trim() === "") {
+                btn.remove();
+                return;
+            }
+
+            document
+                .getElementById("newsGrid")
+                .insertAdjacentHTML("beforeend", html);
+
+            btn.innerHTML = "Load More";
+
+        } catch {
+
+            btn.innerHTML = "Failed";
+
+        }
+
+        loading = false;
+    }
+
+    document
+        .getElementById("loadMoreBtn")
+        .addEventListener("click", loadMore);
+</script>

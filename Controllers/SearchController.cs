@@ -1,4 +1,5 @@
-﻿using BeritaDlanggu.Models;
+﻿using BeritaDlanggu.Helpers;
+using BeritaDlanggu.Models;
 using BeritaDlanggu.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,6 @@ namespace BeritaDlanggu.Controllers
         {
             _context = context;
         }
-        [HttpGet("/Search")]
         public IActionResult Index(string query = null, string catId = null)
         {
             // Need this every Page

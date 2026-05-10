@@ -24,7 +24,7 @@ namespace BeritaDlanggu.Services
 
         private async Task ListenLoop()
         {
-            var buffer = new byte[40960];
+            var buffer = new byte[1024 * 512];
 
             while (_ws.State == WebSocketState.Open)
             {

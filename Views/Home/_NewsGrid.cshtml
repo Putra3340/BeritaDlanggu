@@ -1,0 +1,45 @@
+﻿@using BeritaDlanggu.Models.ViewModels;
+@model List<ArticleViewModel>
+
+@foreach (var article in Model)
+{
+    <div class="col-md-6 col-lg-4 mb-4 fade-in">
+        <div class="news-card">
+            <div class="card-img-wrapper">
+                <img src="@article.Banner" alt="@article.Title" loading="lazy">
+                <span class="category-badge">@article.CategoryName</span>
+            </div>
+
+            <div class="card-body">
+                <h5 class="card-title">
+                    <a href="/Article/@article.Slug">
+                        @article.Title
+                    </a>
+                </h5>
+
+                <p class="card-excerpt">
+                    @article.Content...
+                </p>
+
+                <div class="card-meta d-flex flex-column align-items-start text-start">
+                    <span>
+                        <i class="bi bi-person me-1"></i>
+                        @article.AuthorName
+                    </span>
+
+                    <div class="d-flex gap-3">
+                        <span>
+                            <i class="bi bi-clock me-1"></i>
+                            @article.CreatedAt.ToString("dd MMMM yyyy")
+                        </span>
+
+                        <span>
+                            <i class="bi bi-eye me-1"></i>
+                            @article.ViewsCount
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

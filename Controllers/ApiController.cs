@@ -1,8 +1,10 @@
 ﻿using BeritaDlanggu.Models;
+using BeritaDlanggu.Models.ViewModels;
+using BeritaDlanggu.Pages.Admin;
+using Isopoh.Cryptography.Argon2;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
-using Isopoh.Cryptography.Argon2;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BeritaDlanggu.Controllers
@@ -16,27 +18,6 @@ namespace BeritaDlanggu.Controllers
         public ApiController(BeritaDlangguNetContext context)
         {
             _context = context;
-        }
-        [HttpGet("latest")]
-        public IActionResult GetArticles(int page = 1, int pageSize = 6)
-        {
-            var data = _context.Articles
-                .OrderByDescending(x => x.CreatedAt)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .Select(x => new
-                {
-                    x.Id,
-                    x.Title,
-                    x.ThumbnailUrl,
-                    x.Content,
-                    x.Author.FullName,
-                    x.Views,
-                    x.CreatedAt,
-                    x.Cat.Name
-                }).ToList();
-
-            return Ok(data);
         }
         [HttpGet("wipe")]
         public IActionResult Wipe()
@@ -59,5 +40,6 @@ namespace BeritaDlanggu.Controllers
             Console.WriteLine(valid);
             return Ok(valid);
         }
-}
+        
+    }
 }

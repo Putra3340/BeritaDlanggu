@@ -206,10 +206,33 @@ namespace BeritaDlanggu.Controllers
             return RedirectToAction("Index");
         }
 
-        public IActionResult Privacy()
+        public async Task<IActionResult> LoadMoreArticles(int page = 1)
         {
-            return View();
+            var articlesPerPage = _context.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ArticlePerPage);
+            int pageSize = int.Parse(articlesPerPage?.Value ?? "9");
+
+            var articles = await _context.Articles
+                .Where(x => x.Status == (int)ArticleStatus.Published)
+                .OrderByDescending(x => x.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new ArticleViewModel
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Slug = x.Slug,
+                    Banner = x.ThumbnailUrl,
+                    CategoryName = x.Cat.Name,
+                    AuthorName = x.Author.FullName,
+                    CreatedAt = x.CreatedAt,
+                    ViewsCount = x.Views,
+                    Content = x.Excerpt
+                })
+                .ToListAsync();
+
+            return PartialView("_NewsGrid", articles);
         }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
