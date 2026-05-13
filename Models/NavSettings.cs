@@ -15,6 +15,8 @@ public partial class NavSettings
 
     public int? ArticleId { get; set; }
 
+    public int? SortOrder { get; set; }
+
     public virtual Articles? Article { get; set; }
 
     public virtual Categories? Cat { get; set; }

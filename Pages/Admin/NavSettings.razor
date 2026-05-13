@@ -4,6 +4,8 @@
 @inject NotificationService Notif
 @inject BeritaDlangguNetContext Db
 @inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 <div class="dashboard-topbar">
     <div>
         <h4 class="mb-1">Manajemen Navbar</h4>
@@ -37,11 +39,11 @@
                 </div>
             </div>
 
-            <div class="navbar-preview">
+            <div class="navbar-preview" id="navbar-list">
 
                 @foreach (var item in NavbarItems)
                 {
-                    <div class="nav-item-card">
+                    <div class="nav-item-card" @key="item.Id">
 
                         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
 
@@ -366,6 +368,53 @@
     </div>
 
 </div>
+@code{
+    private DotNetObjectReference<NavSettings>? objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            objRef = DotNetObjectReference.Create(this);
+
+            await JS.InvokeVoidAsync(
+                "initNavbarSort",
+                "navbar-list",
+                objRef
+            );
+        }
+    }
+    [JSInvokable]
+    public async Task UpdateNavbarOrder(int oldIndex, int newIndex)
+    {
+        if (oldIndex == newIndex)
+            return;
+
+        var item = NavbarItems[oldIndex];
+
+        NavbarItems.RemoveAt(oldIndex);
+        NavbarItems.Insert(newIndex, item);
+
+        for (int i = 0; i < NavbarItems.Count; i++)
+        {
+            var nav = await Db.NavSettings
+                .FirstOrDefaultAsync(x => x.Id == NavbarItems[i].Id);
+
+            if (nav != null)
+            {
+                nav.SortOrder = i;
+            }
+        }
+
+        await Db.SaveChangesAsync();
+
+        await InvokeAsync(StateHasChanged);
+    }
+    public async ValueTask DisposeAsync()
+    {
+        objRef?.Dispose();
+    }
+}
 
 @code {
     private List<NavbarItem> NavbarItems = new();
@@ -438,7 +487,12 @@
         };
 
         // Reorder by id
-        NavbarItems = NavbarItems.OrderBy(x => x.Id).ToList();
+        NavbarItems = NavbarItems
+    .OrderBy(x =>
+        Db.NavSettings
+        .First(n => n.Id == x.Id)
+        .SortOrder)
+    .ToList();
     }
     private void ReloadNav()
     {
@@ -489,7 +543,12 @@
         ;
 
         // Reorder by id
-        NavbarItems = NavbarItems.OrderBy(x => x.Id).ToList();
+        NavbarItems = NavbarItems
+    .OrderBy(x =>
+        Db.NavSettings
+        .First(n => n.Id == x.Id)
+        .SortOrder)
+    .ToList();
     }
 
     private void AddItem()

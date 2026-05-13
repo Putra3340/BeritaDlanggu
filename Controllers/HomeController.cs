@@ -33,61 +33,81 @@ namespace BeritaDlanggu.Controllers
             ViewData["CatList"] = _context.Categories.Include(c => c.SubCategories).AsNoTracking().ToList();
             #region NAV THING
             List<NavbarItem> NavbarItems = new();
+
             var category = _context.NavSettings
-    .Include(x => x.Cat)
-    .ThenInclude(x => x.SubCategories)
-    .Where(x => x.Cat != null)
-    .ToList();
+                .Include(x => x.Cat)
+                .ThenInclude(x => x.SubCategories)
+                .Where(x => x.Cat != null)
+                .OrderBy(x => x.SortOrder)
+                .ToList();
 
-            if (category.Count != 0)
+            foreach (var x in category)
             {
-                foreach (var x in category)
+                NavbarItems.Add(new NavbarItem
                 {
-                    NavbarItems.Add(new NavbarItem
+                    Id = x.Id,
+                    Title = x.Title,
+                    Url = $"/Kategori/{x.Cat.Slug}",
+                    Type = "category",
+                    Visible = true,
+
+                    SubItems = x.Cat.SubCategories
+                        .Select(s => new NavbarSubItem
+                        {
+                            Id = s.Id,
+                            Title = s.Name,
+                            Url = $"/Kategori/{s.Slug}"
+                        })
+                        .ToList()
+                });
+            }
+
+            var customnav = _context.NavSettings
+                .Include(x => x.Article)
+                .Where(x => x.Article != null && x.Parent == null)
+                .OrderBy(x => x.SortOrder)
+                .ToList();
+
+            foreach (var x in customnav)
+            {
+                NavbarItems.Add(new NavbarItem
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Url = $"/Article/{x.Article.Slug}",
+                    Type = "custom",
+                    Visible = true
+                });
+            }
+
+            var customsubnav = _context.NavSettings
+                .Include(x => x.Article)
+                .Where(x => x.Article != null && x.Parent != null)
+                .OrderBy(x => x.SortOrder)
+                .ToList();
+
+            foreach (var x in customsubnav)
+            {
+                var parent = NavbarItems.FirstOrDefault(n => n.Id == x.ParentId);
+
+                if (parent != null)
+                {
+                    parent.SubItems.Add(new NavbarSubItem
                     {
                         Id = x.Id,
                         Title = x.Title,
-                        Url = $"/Kategori/{x.Cat.Slug}",
-                        Type = "category",
-                        Visible = true,
+                        Url = $"/Article/{x.Article.Slug}"
+                    });
+                }
+            }
 
-                        SubItems = x.Cat.SubCategories
-                            .Select(s => new NavbarSubItem
-                            {
-                                Id = s.Id,
-                                Title = s.Name,
-                                Url = $"/Kategori/{s.Slug}"
-                            })
-                            .ToList()
-                    });
-                }
-            }
-            // no child
-            var customnav = _context.NavSettings.Include(x => x.Article).Where(x => x.Article != null && x.Parent == null).ToList();
-            if (customnav.Count != 0)
-            {
-                foreach (var x in customnav)
-                {
-                    NavbarItems.Add(new NavbarItem
-                    {
-                        Id = x.Id,
-                        Title = x.Title,
-                        Url = $"/Article/{x.Article.Slug}",
-                        Type = "custom",
-                        Visible = true
-                    });
-                }
-            }
-            ;
-            var customsubnav = _context.NavSettings.Include(x => x.Article).Where(x => x.Article != null && x.Parent != null).ToList();
-            if (customsubnav.Count != 0)
-            {
-                foreach (var x in customsubnav)
-                {
-                    var parent = NavbarItems.FirstOrDefault(n => n.Id == x.ParentId);
-                    parent.SubItems.Add(new NavbarSubItem { Id = x.Id, Title = x.Title, Url = $"/Article/{x.Article.Slug}" });
-                }
-            };
+            NavbarItems = NavbarItems
+                .OrderBy(x =>
+                    _context.NavSettings
+                    .First(n => n.Id == x.Id)
+                    .SortOrder)
+                .ToList();
+
             ViewData["NavbarItems"] = NavbarItems;
             #endregion
             #region Footer THING
@@ -187,23 +207,6 @@ namespace BeritaDlanggu.Controllers
             ViewData["MetaType"] = "website";
 
             return View(model);
-        }
-
-        public async Task<IActionResult> Login()
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, "John Doe"),
-                new Claim(ClaimTypes.Email, "johndoe@example.com"),
-                new Claim(ClaimTypes.Role, "Admin")
-            };
-
-            var identity = new ClaimsIdentity(claims, "Cookie");
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync(principal);
-
-            return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> LoadMoreArticles(int page = 1)

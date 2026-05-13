@@ -2,15 +2,15 @@
 using BeritaDlanggu.Models.ViewModels;
 using BeritaDlanggu.Pages.Admin;
 using Isopoh.Cryptography.Argon2;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Security.Claims;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BeritaDlanggu.Controllers
 {
-    [Route("api")]
-    [ApiController]
     public class ApiController : ControllerBase
     {
         private readonly BeritaDlangguNetContext _context;
@@ -19,27 +19,33 @@ namespace BeritaDlanggu.Controllers
         {
             _context = context;
         }
-        [HttpGet("wipe")]
+        [HttpGet("/dev/QwErTyUiOpAsDfGhJkLzXcVbNmPlOkIjUhYgTfRdEsWaQzXcVbNmAsDfGhJkLqWeRtYuIoPaSdFgHjKlMnBvrTyUiOpAsDfGhJkLzXcVbNmQwErTyUiOpAsDfGhJkLqWeRtYuIoPaSdFgHjKlZxCvBnMmNbVcXzAsDfGhJkLp")]
         public IActionResult Wipe()
         {
+            _context.Articles.RemoveRange(_context.Articles);
             _context.Users.RemoveRange(_context.Users);
+            _context.SubCategories.RemoveRange(_context.SubCategories);
             _context.Categories.RemoveRange(_context.Categories);
             _context.Settings.RemoveRange(_context.Settings);
-            _context.Articles.RemoveRange(_context.Articles);
             _context.SaveChanges();
             return Ok();
         }
-       
-        [HttpGet("/test")]
-        public async Task<IActionResult> Test()
+        [HttpGet("/dev/aKfjdPqweLmznXcvbRtYuIoPasDfGhJkLzXcVbNmQwErTyUiOpAsDfGhJkLqWeRtYuIoPaSdFgHjKlZxCvBnMmNbVcXzLkJhGfDsApOiUyTrEwQzXcVbNmAsDfGhJkLqWeRtYuIoPaSdFgHjKlZxCvBnMmNbVcXzQwErTyUiOp")]
+        public async Task<IActionResult> Login()
         {
-            var hash = Argon2.Hash("123");
-            var valid = Argon2.Verify("123", hash);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "John Doe"),
+                new Claim(ClaimTypes.Email, "johndoe@example.com"),
+                new Claim(ClaimTypes.Role, "Admin")
+            };
 
-            Console.WriteLine(hash);
-            Console.WriteLine(valid);
-            return Ok(valid);
+            var identity = new ClaimsIdentity(claims, "Cookie");
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(principal);
+
+            return RedirectToAction("Index", "Home");
         }
-        
     }
 }
