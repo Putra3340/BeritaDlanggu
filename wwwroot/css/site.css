@@ -1718,6 +1718,24 @@ img {
     .dashboard-main {
         padding: 16px;
     }
+    .carousel-item-title{
+        font-size: 25px !important;
+        margin-bottom: 0 !important;
+    }
+    .carousel-item-content{
+        display: none;
+    }
+
+    .carousel-read-btn{
+        padding: 10px 15px;
+        font-size: 10px;
+    }
+    .container {
+        max-width: 100% !important;
+    }
+    .carousel-indicators{
+        margin-bottom: 5px !important;
+    }
 }
 
 @media (max-width: 576px) {
@@ -1727,6 +1745,27 @@ img {
 
     .top-bar .breaking-news {
         font-size: 12px;
+    }
+
+    .carousel-item-title {
+        font-size: 15px !important;
+    }
+
+    .carousel-item-content {
+        display: none;
+    }
+
+    .carousel-item-meta {
+        display: none;
+    }
+
+    .carousel-read-btn {
+        padding: 5px;
+        font-size: 10px;
+    }
+
+    .carousel-item-category {
+        display: none !important;
     }
 }
 

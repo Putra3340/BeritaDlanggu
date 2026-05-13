@@ -49,14 +49,14 @@
                         <img src="@item.Banner" alt="@item.Title">
                     </div>
                     <div class="carousel-overlay">
-                        <span class="category-badge">@item.CategoryName</span>
-                        <h2>@item.Title</h2>
-                        <p>@item.Content</p>
-                        <div class="meta">
+                        <span class="category-badge carousel-item-category">@item.CategoryName</span>
+                        <h2 class="carousel-item-title">@item.Title</h2>
+                        <p class="carousel-item-content">@item.Content</p>
+                        <div class="meta carousel-item-meta">
                             <i class="bi bi-person me-1"></i>@item.AuthorName •
                             <i class="bi bi-clock ms-2 me-1"></i>@item.CreatedAt.ToString("d MMMM yyyy")
                         </div>
-                        <a href="/Article/@item.Slug" class="btn btn-primary btn-sm mt-1">
+                        <a href="/Article/@item.Slug" class="btn btn-primary btn-sm mt-1 carousel-read-btn">
                             Baca Selengkapnya <i class="bi bi-arrow-right ms-1"></i>
                         </a>
                     </div>
