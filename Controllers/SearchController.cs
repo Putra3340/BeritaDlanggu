@@ -23,8 +23,8 @@ namespace BeritaDlanggu.Controllers
             var articlesPerPage = _context.Settings.FirstOrDefault(x => x.Key == ServerSettingsKey.ArticlePerPage);
             ViewData[ServerSettingsKey.WebsiteName] = siteNameSetting?.Value ?? "";
             ViewData[ServerSettingsKey.TagLine] = tagline?.Value ?? "";
-            ViewData[ServerSettingsKey.ThemeColor] = theme?.Value ?? "blue";
-            ViewData[ServerSettingsKey.ThemeAccentColor] = accentColor?.Value ?? "blue";
+            ViewData[ServerSettingsKey.ThemeColor] = theme?.Value ?? "#711e76";
+            ViewData[ServerSettingsKey.ThemeAccentColor] = accentColor?.Value ?? "#ba8fb8";
             ViewData[ServerSettingsKey.ArticlePerPage] = articlesPerPage?.Value ?? "9";
             ViewData["CatList"] = _context.Categories.Include(c => c.SubCategories).AsNoTracking().ToList();
             #region NAV THING

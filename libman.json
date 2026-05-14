@@ -14,5 +14,15 @@
       "library": "highlight.js@11.11.1",
       "destination": "wwwroot/lib/highlight.js/"
     }
+  ,
+{
+  "provider": "cdnjs",
+  "library": "Sortable@1.15.6",
+  "destination": "wwwroot/lib/Sortable/",
+  "files": [
+    "Sortable.min.js",
+    "Sortable.js"
   ]
+}
+]
 }

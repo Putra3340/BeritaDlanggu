@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeritaDlanggu.Migrations
 {
     [DbContext(typeof(BeritaDlangguNetContext))]
-    [Migration("20260508023052_DynamicNavRev")]
-    partial class DynamicNavRev
+    [Migration("20260514135437_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -192,6 +192,9 @@ namespace BeritaDlanggu.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SortOrder")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")

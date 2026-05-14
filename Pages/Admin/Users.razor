@@ -208,6 +208,7 @@
             user.Role = userRole;
             user.IsActive = userStatus == "active";
             user.Email = userEmail;
+            Db.SaveChanges();
             // Activity Log
             var activity = new ActivityLogs
             {
@@ -232,6 +233,7 @@
                 IsActive = userStatus == "active",
                 CreatedAt = DateTime.Now
             });
+            Db.SaveChanges();
             // Activity Log
             var activity = new ActivityLogs
             {

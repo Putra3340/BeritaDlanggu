@@ -12,6 +12,18 @@ namespace BeritaDlanggu.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "ArticleCategories",
+                columns: table => new
+                {
+                    ArticleId = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ArticleCategories", x => new { x.ArticleId, x.CategoryId });
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Categories",
                 columns: table => new
                 {
@@ -20,18 +32,11 @@ namespace BeritaDlanggu.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Slug = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ParentId = table.Column<int>(type: "int", nullable: true),
-                    SortOrder = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Categories_Categories_ParentId",
-                        column: x => x.ParentId,
-                        principalTable: "Categories",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -72,6 +77,28 @@ namespace BeritaDlanggu.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SubCategories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ParentId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Slug = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubCategories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubCategories_Categories",
+                        column: x => x.ParentId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "ActivityLogs",
                 columns: table => new
                 {
@@ -79,7 +106,7 @@ namespace BeritaDlanggu.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Details = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     IpAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -91,7 +118,7 @@ namespace BeritaDlanggu.Migrations
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -100,12 +127,15 @@ namespace BeritaDlanggu.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    CatId = table.Column<int>(type: "int", nullable: false),
+                    SubCatId = table.Column<int>(type: "int", nullable: true),
                     Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Slug = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Excerpt = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ThumbnailUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    ThumbnailFull = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     IsFeatured = table.Column<bool>(type: "bit", nullable: false),
                     Views = table.Column<int>(type: "int", nullable: false),
                     MetaTitle = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -119,58 +149,55 @@ namespace BeritaDlanggu.Migrations
                 {
                     table.PrimaryKey("PK_Articles", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Articles_Users_AuthorId",
-                        column: x => x.AuthorId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ArticleCategories",
-                columns: table => new
-                {
-                    ArticleId = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ArticleCategories", x => new { x.ArticleId, x.CategoryId });
-                    table.ForeignKey(
-                        name: "FK_ArticleCategories_Articles_ArticleId",
-                        column: x => x.ArticleId,
-                        principalTable: "Articles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ArticleCategories_Categories_CategoryId",
-                        column: x => x.CategoryId,
+                        name: "FK_Articles_Categories",
+                        column: x => x.CatId,
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Articles_SubCategories",
+                        column: x => x.SubCatId,
+                        principalTable: "SubCategories",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Articles_Users_AuthorId",
+                        column: x => x.AuthorId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Comments",
+                name: "NavSettings",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ArticleId = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CatId = table.Column<int>(type: "int", nullable: true),
+                    ParentId = table.Column<int>(type: "int", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ArticleId = table.Column<int>(type: "int", nullable: true),
+                    SortOrder = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Comments", x => x.Id);
+                    table.PrimaryKey("PK_NavSettings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Comments_Articles_ArticleId",
+                        name: "FK_NavSettings_Articles",
                         column: x => x.ArticleId,
                         principalTable: "Articles",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_NavSettings_Categories",
+                        column: x => x.CatId,
+                        principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_NavSettings_NavSettings",
+                        column: x => x.ParentId,
+                        principalTable: "NavSettings",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -189,15 +216,20 @@ namespace BeritaDlanggu.Migrations
                 column: "AuthorId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Articles_CatId",
+                table: "Articles",
+                column: "CatId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Articles_Slug",
                 table: "Articles",
                 column: "Slug",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Categories_ParentId",
-                table: "Categories",
-                column: "ParentId");
+                name: "IX_Articles_SubCatId",
+                table: "Articles",
+                column: "SubCatId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_Slug",
@@ -206,15 +238,30 @@ namespace BeritaDlanggu.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Comments_ArticleId",
-                table: "Comments",
+                name: "IX_NavSettings_ArticleId",
+                table: "NavSettings",
                 column: "ArticleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NavSettings_CatId",
+                table: "NavSettings",
+                column: "CatId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NavSettings_ParentId",
+                table: "NavSettings",
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Settings_Key",
                 table: "Settings",
                 column: "Key",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubCategories_ParentId",
+                table: "SubCategories",
+                column: "ParentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
@@ -239,19 +286,22 @@ namespace BeritaDlanggu.Migrations
                 name: "ArticleCategories");
 
             migrationBuilder.DropTable(
-                name: "Comments");
+                name: "NavSettings");
 
             migrationBuilder.DropTable(
                 name: "Settings");
 
             migrationBuilder.DropTable(
-                name: "Categories");
-
-            migrationBuilder.DropTable(
                 name: "Articles");
 
             migrationBuilder.DropTable(
+                name: "SubCategories");
+
+            migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
         }
     }
 }
